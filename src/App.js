@@ -23,19 +23,19 @@ const App = () => {
         }
       );
 
-      if (!res.ok) {
-        throw new Error(`HTTP error! Status: ${res.status}`);
-      }
-
-      const data = await res.json();
-      console.log("API Response:", data); // Log response
-      setResponse(data.presigned_url || "No URL in response");
-    } catch (err) {
-      console.error("Fetch error:", err); // Log errors
-      setError(err.message || "Unknown error occurred");
-    } finally {
-      setIsLoading(false); // Stop spinner
-    }
+          const text = await res.text(); // Read raw response
+          console.log("Raw response:", text);
+      
+          const data = JSON.parse(text);
+          console.log("Parsed JSON:", data);
+      
+          setResponse(data.presigned_url || "No URL in response");
+        } catch (err) {
+          console.error("Error:", err);
+          setError(err.message || "Unknown error occurred");
+        } finally {
+          setIsLoading(false);
+        }
   };
 
   return (
