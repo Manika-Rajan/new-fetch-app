@@ -20,7 +20,7 @@ const App = () => {
           body: JSON.stringify({
             // Sending the test input in the same format as it was in API Gateway
             body: JSON.stringify({
-              file_key: "compressed.tracemonkey-pldi-09.pdf", // Replace with the correct file key
+              file_key: 'compressed.tracemonkey-pldi-09.pdf', // Replace with the correct file key
             }),
           }),
         }
