@@ -28,8 +28,10 @@ const App = () => {
       }
 
       const data = await res.json();
+      console.log("API Response:", data); // Log response
       setResponse(data.presigned_url || "No URL in response");
     } catch (err) {
+      console.error("Fetch error:", err); // Log errors
       setError(err.message || "Unknown error occurred");
     } finally {
       setIsLoading(false); // Stop spinner
