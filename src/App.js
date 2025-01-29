@@ -11,7 +11,7 @@ const App = () => {
     setResponse(null); // Reset response
     try {
       const res = await fetch(
-        "https://vtwyu7hv50.execute-api.ap-south-1.amazonaws.com/s1/RBR_report_pre-signed_URL",
+        "https://vtwyu7hv50.execute-api.ap-south-1.amazonaws.com/default/RBR_report_pre-signed_URL",
         {
           method: "POST",
           headers: {
