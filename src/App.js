@@ -1,572 +1,448 @@
 import React, { useMemo, useState } from "react";
 import "./App.css";
 
-const navItems = [
-  "Executive Dashboard",
-  "Market Intelligence",
-  "Report Opportunities",
-  "Website Insights",
-  "Google Ads Insights",
-  "Reports Performance",
-  "AI Chat Assistant",
-  "Alerts & Notifications",
-  "Knowledge Hub",
-  "Settings",
+const competitors = [
+  {
+    id: "marketreports",
+    name: "MarketReports.com",
+    type: "Commercial report marketplace",
+    status: "High activity",
+    news: [
+      {
+        text: "Recently got $100 billion funding.",
+        source: "link",
+      },
+      {
+        text: "Launched new branch in UK.",
+        source: "link",
+      },
+    ],
+    reportCount: {
+      label: "Website report count change",
+      from: "12,000",
+      to: "15,000",
+      change: "+3,000",
+    },
+    employeeCount: {
+      label: "LinkedIn employee count change",
+      from: "100",
+      to: "10,000",
+      change: "+9,900",
+    },
+    updates: [
+      {
+        text: 'Added "Automobile industry" in the categories of the reports.',
+        date: "13-July-2026",
+        source: "link",
+      },
+      {
+        text: "Stock value of the company rose by 2 points, currently at 138.",
+        source: "link",
+      },
+    ],
+  },
+  {
+    id: "ibisworld",
+    name: "IBISWorld.com",
+    type: "Industry research platform",
+    status: "Moderate activity",
+    news: [
+      {
+        text: "Expanded new research coverage for emerging business sectors.",
+        source: "link",
+      },
+      {
+        text: "Published updated industry outlook pages for small businesses.",
+        source: "link",
+      },
+    ],
+    reportCount: {
+      label: "Website report count change",
+      from: "9,400",
+      to: "9,850",
+      change: "+450",
+    },
+    employeeCount: {
+      label: "LinkedIn employee count change",
+      from: "620",
+      to: "690",
+      change: "+70",
+    },
+    updates: [
+      {
+        text: "Added new industry analysis pages for B2B services.",
+        date: "10-July-2026",
+        source: "link",
+      },
+      {
+        text: "Updated pricing and subscription communication on selected pages.",
+        source: "link",
+      },
+    ],
+  },
+  {
+    id: "marketresearch",
+    name: "MarketResearch.com",
+    type: "Report aggregation platform",
+    status: "Watch closely",
+    news: [
+      {
+        text: "Started promoting new syndicated research categories.",
+        source: "link",
+      },
+      {
+        text: "Added new publisher partnerships in selected report verticals.",
+        source: "link",
+      },
+    ],
+    reportCount: {
+      label: "Website report count change",
+      from: "28,500",
+      to: "29,100",
+      change: "+600",
+    },
+    employeeCount: {
+      label: "LinkedIn employee count change",
+      from: "210",
+      to: "235",
+      change: "+25",
+    },
+    updates: [
+      {
+        text: "Added new reports in food processing and specialty chemicals.",
+        date: "11-July-2026",
+        source: "link",
+      },
+      {
+        text: "Refreshed several category landing pages with updated report lists.",
+        source: "link",
+      },
+    ],
+  },
+  {
+    id: "niti",
+    name: "NITI Aayog",
+    type: "Policy and public research source",
+    status: "Policy signal source",
+    news: [
+      {
+        text: "Published new policy discussion material for Indian growth sectors.",
+        source: "link",
+      },
+      {
+        text: "Released new public data points useful for industry opportunity tracking.",
+        source: "link",
+      },
+    ],
+    reportCount: {
+      label: "Website report count change",
+      from: "1,240",
+      to: "1,310",
+      change: "+70",
+    },
+    employeeCount: {
+      label: "LinkedIn employee count change",
+      from: "1,100",
+      to: "1,170",
+      change: "+70",
+    },
+    updates: [
+      {
+        text: "Added policy-linked materials relevant to manufacturing and exports.",
+        date: "09-July-2026",
+        source: "link",
+      },
+      {
+        text: "Updated selected public resource pages with newer references.",
+        source: "link",
+      },
+    ],
+  },
+  {
+    id: "corpium",
+    name: "Corpium.co.uk",
+    type: "UK competitor / reference site",
+    status: "Low activity",
+    news: [
+      {
+        text: "Updated company service pages with new market-entry messaging.",
+        source: "link",
+      },
+      {
+        text: "Added new website content around international expansion.",
+        source: "link",
+      },
+    ],
+    reportCount: {
+      label: "Website report count change",
+      from: "830",
+      to: "890",
+      change: "+60",
+    },
+    employeeCount: {
+      label: "LinkedIn employee count change",
+      from: "42",
+      to: "49",
+      change: "+7",
+    },
+    updates: [
+      {
+        text: "Added new service page for international company research.",
+        date: "07-July-2026",
+        source: "link",
+      },
+      {
+        text: "Changed homepage content and call-to-action positioning.",
+        source: "link",
+      },
+    ],
+  },
 ];
 
-const kpis = [
-  {
-    label: "Total Report Opportunities",
-    value: "128",
-    change: "+18 this week",
-    tone: "blue",
-  },
-  {
-    label: "High Demand Opportunities",
-    value: "42",
-    change: "Strong demand signals",
-    tone: "green",
-  },
-  {
-    label: "Website Search Queries",
-    value: "24.6K",
-    change: "+11.4% vs last week",
-    tone: "purple",
-  },
-  {
-    label: "Top Performing Reports",
-    value: "17",
-    change: "Conversion-ready reports",
-    tone: "orange",
-  },
-];
+function AnalyticsIcon() {
+  return (
+    <svg viewBox="0 0 48 48" aria-hidden="true">
+      <rect x="6" y="25" width="7" height="15" rx="2" />
+      <rect x="19" y="17" width="7" height="23" rx="2" />
+      <rect x="32" y="9" width="7" height="31" rx="2" />
+      <path d="M8 21L22 10L35 5" fill="none" strokeWidth="4" strokeLinecap="round" />
+    </svg>
+  );
+}
 
-const opportunities = [
-  {
-    title: "EV Charging Station Business in India",
-    demand: 94,
-    status: "High demand",
-    reason: "Rising website searches + strong Google Ads intent",
-    sources: ["Google Ads", "Website Search", "Report Catalog"],
-  },
-  {
-    title: "Cold Pressed Oil Manufacturing Business",
-    demand: 88,
-    status: "Ready to promote",
-    reason: "Entrepreneur searches are increasing across metro cities",
-    sources: ["Website Search", "Trends"],
-  },
-  {
-    title: "Biodegradable Packaging Market in India",
-    demand: 85,
-    status: "Create report",
-    reason: "Sustainability searches and B2B demand signals are moving up",
-    sources: ["Trends", "AI Suggestion"],
-  },
-  {
-    title: "Ready-Made Garments Export Opportunities",
-    demand: 81,
-    status: "Update existing report",
-    reason: "Import/export buyer interest can be connected with RBR data",
-    sources: ["DynamoDB", "Website Search"],
-  },
-];
+function GlobeIcon() {
+  return (
+    <svg viewBox="0 0 48 48" aria-hidden="true">
+      <circle cx="24" cy="24" r="17" fill="none" strokeWidth="3" />
+      <path d="M7 24h34" fill="none" strokeWidth="3" strokeLinecap="round" />
+      <path
+        d="M24 7c5 5 7.5 10.7 7.5 17S29 36 24 41c-5-5-7.5-10.7-7.5-17S19 12 24 7z"
+        fill="none"
+        strokeWidth="3"
+      />
+    </svg>
+  );
+}
 
-const trendingIndustries = [
-  { name: "EV Infrastructure", score: 96, note: "High search intent" },
-  { name: "Food Processing", score: 91, note: "SME-friendly demand" },
-  { name: "Packaging", score: 87, note: "B2B growth signals" },
-  { name: "Pharma Ingredients", score: 82, note: "Export-linked interest" },
-  { name: "Textiles & Garments", score: 79, note: "Buyer lead opportunity" },
-];
+function NewsIcon() {
+  return (
+    <svg viewBox="0 0 48 48" aria-hidden="true">
+      <rect x="10" y="9" width="24" height="30" rx="2" fill="none" strokeWidth="3" />
+      <path d="M16 17h12M16 24h12M16 31h8M34 16h4v22a3 3 0 0 1-3 3h-1" fill="none" strokeWidth="3" strokeLinecap="round" />
+    </svg>
+  );
+}
 
-const websiteSearches = [
-  { query: "dimethyl amine", count: 218, intent: "Industrial buyer research" },
-  { query: "ev charging business", count: 194, intent: "Business opportunity" },
-  { query: "cold pressed oil project report", count: 173, intent: "Purchase intent" },
-  { query: "paper cup manufacturing", count: 151, intent: "Startup planning" },
-  { query: "garments export buyers", count: 139, intent: "Export opportunity" },
-];
+function ChartIcon() {
+  return (
+    <svg viewBox="0 0 48 48" aria-hidden="true">
+      <path d="M10 39h29" fill="none" strokeWidth="3" strokeLinecap="round" />
+      <path d="M15 34V22M24 34V13M33 34V26" fill="none" strokeWidth="4" strokeLinecap="round" />
+    </svg>
+  );
+}
 
-const adsRows = [
-  {
-    campaign: "RBR – Search – Business Reports",
-    clicks: 1432,
-    cost: "₹18,420",
-    leads: 41,
-    quality: "Medium",
-  },
-  {
-    campaign: "RBR | Entrepreneurs",
-    clicks: 982,
-    cost: "₹9,880",
-    leads: 34,
-    quality: "High",
-  },
-  {
-    campaign: "RBR – Search – Prebook – High Intent",
-    clicks: 326,
-    cost: "₹5,140",
-    leads: 19,
-    quality: "High",
-  },
-];
+function PeopleIcon() {
+  return (
+    <svg viewBox="0 0 48 48" aria-hidden="true">
+      <circle cx="18" cy="17" r="6" fill="none" strokeWidth="3" />
+      <circle cx="32" cy="18" r="5" fill="none" strokeWidth="3" />
+      <path d="M8 39v-4c0-6 4-10 10-10s10 4 10 10v4" fill="none" strokeWidth="3" strokeLinecap="round" />
+      <path d="M29 28c5 1 8 4 8 9v2" fill="none" strokeWidth="3" strokeLinecap="round" />
+    </svg>
+  );
+}
 
-const reportPerformance = [
-  { report: "EV Charging Station Market Report", views: 1120, buys: 19 },
-  { report: "Cold Pressed Oil Business Report", views: 970, buys: 14 },
-  { report: "FMCG Distribution Business Report", views: 850, buys: 11 },
-  { report: "Paper Cup Manufacturing Report", views: 790, buys: 9 },
-];
+function BoxIcon() {
+  return (
+    <svg viewBox="0 0 48 48" aria-hidden="true">
+      <path d="M24 5l16 8v20l-16 10L8 33V13l16-8z" fill="none" strokeWidth="3" strokeLinejoin="round" />
+      <path d="M8 13l16 9 16-9M24 22v21" fill="none" strokeWidth="3" strokeLinecap="round" />
+    </svg>
+  );
+}
 
-const aiInsights = [
-  "Prioritize reports where website searches and Google Ads keywords overlap.",
-  "Create one landing page per high-demand opportunity before increasing ad budget.",
-  "Move high-intent searches into a weekly report creation queue.",
-  "Use AI to compare existing report catalog with unmet search demand.",
-];
+function SourceLink({ children = "link" }) {
+  return (
+    <a className="source-link" href="#source" onClick={(event) => event.preventDefault()}>
+      {children}
+    </a>
+  );
+}
 
-const alerts = [
-  {
-    title: "High search spike detected",
-    description: "EV charging and food processing searches increased sharply.",
-    level: "Important",
-  },
-  {
-    title: "Report refresh suggested",
-    description: "Cold Pressed Oil report has strong traffic but should be updated.",
-    level: "Action",
-  },
-  {
-    title: "New opportunity cluster",
-    description: "Packaging-related search terms are forming a new report category.",
-    level: "Watch",
-  },
-];
+function MetricLine({ metric, iconType }) {
+  return (
+    <section className="monitor-section">
+      <div className={`section-icon ${iconType}`}>
+        {iconType === "chart" ? <ChartIcon /> : <PeopleIcon />}
+      </div>
+
+      <div className="section-content">
+        <h3>{metric.label}</h3>
+        <p className="metric-text">
+          Changed from <strong>{metric.from}</strong> to <strong>{metric.to}</strong>
+          <span className="delta-badge">{metric.change}</span>
+        </p>
+      </div>
+    </section>
+  );
+}
 
 function App() {
-  const [activeNav, setActiveNav] = useState("Executive Dashboard");
-  const [selectedOpportunity, setSelectedOpportunity] = useState(opportunities[0]);
-  const [chatInput, setChatInput] = useState("");
-  const [messages, setMessages] = useState([
-    {
-      role: "ai",
-      text:
-        "Hello Rajan. I am ready to analyze RBR demand signals, website searches, Google Ads performance, and report opportunities.",
-    },
-  ]);
+  const [selectedId, setSelectedId] = useState("marketreports");
 
-  const totalAdLeads = useMemo(
-    () => adsRows.reduce((sum, row) => sum + row.leads, 0),
-    []
+  const selectedCompetitor = useMemo(
+    () => competitors.find((competitor) => competitor.id === selectedId) || competitors[0],
+    [selectedId]
   );
 
-  const handleNavClick = (item) => {
-    setActiveNav(item);
-    const element = document.getElementById(item.replaceAll(" ", "-"));
-    if (element) {
-      element.scrollIntoView({ behavior: "smooth", block: "start" });
-    }
-  };
-
-  const createAiReply = (question) => {
-    const lower = question.toLowerCase();
-
-    if (lower.includes("high demand") || lower.includes("opportunities")) {
-      return "The strongest current opportunities are EV Charging Station Business, Cold Pressed Oil Manufacturing, Biodegradable Packaging, and Ready-Made Garments Export Opportunities. These should be prioritized because they combine user search interest, paid traffic intent, and report monetization potential.";
-    }
-
-    if (lower.includes("trending") || lower.includes("industries")) {
-      return "Top trending industries right now are EV Infrastructure, Food Processing, Packaging, Pharma Ingredients, and Textiles & Garments. EV Infrastructure has the highest urgency because demand is both consumer-facing and business-facing.";
-    }
-
-    if (lower.includes("website") || lower.includes("searching")) {
-      return "Users are searching for industrial chemicals, EV charging business ideas, cold pressed oil project reports, paper cup manufacturing, and garments export buyers. These searches should be grouped into report opportunity clusters.";
-    }
-
-    if (lower.includes("ads") || lower.includes("google")) {
-      return "Google Ads should be optimized around high-intent report terms. The best next step is to separate business idea traffic, project report traffic, and buyer/export traffic into different landing page flows.";
-    }
-
-    return "My recommendation is to compare three signals together: website searches, Google Ads search terms, and existing report catalog coverage. Wherever demand is high but report coverage is weak, create or update a report first.";
-  };
-
-  const sendMessage = (textFromButton) => {
-    const finalText = textFromButton || chatInput.trim();
-    if (!finalText) return;
-
-    const userMessage = { role: "user", text: finalText };
-    const aiMessage = { role: "ai", text: createAiReply(finalText) };
-
-    setMessages((prev) => [...prev, userMessage, aiMessage]);
-    setChatInput("");
-  };
+  const summary = useMemo(() => {
+    return {
+      monitored: competitors.length,
+      highActivity: competitors.filter((item) => item.status.toLowerCase().includes("high")).length,
+      totalSignals:
+        selectedCompetitor.news.length +
+        selectedCompetitor.updates.length +
+        2,
+    };
+  }, [selectedCompetitor]);
 
   return (
-    <div className="app-shell">
-      <aside className="sidebar">
-        <div className="brand-block">
-          <div className="brand-mark">AI</div>
-          <div>
-            <h1>RBR AI CoE</h1>
-            <p>India Command Center</p>
+    <div className="coe-monitor-page">
+      <header className="topbar">
+        <div className="topbar-brand">
+          <div className="brand-icon">
+            <AnalyticsIcon />
           </div>
+          <h1>RBR AI CoE India</h1>
         </div>
 
-        <nav className="nav-list">
-          {navItems.map((item) => (
-            <button
-              key={item}
-              className={`nav-item ${activeNav === item ? "active" : ""}`}
-              onClick={() => handleNavClick(item)}
-            >
-              <span>{item}</span>
-            </button>
-          ))}
-        </nav>
+        <div className="topbar-divider" />
 
-        <div className="sidebar-card">
-          <p className="mini-label">System Mode</p>
-          <h3>Frontend Preview</h3>
-          <p>
-            Data is currently sample data. API connections can be added after
-            deployment.
-          </p>
+        <div className="module-title">
+          <h2>Competitor Monitoring</h2>
+          <p>Track competitor news, website changes, LinkedIn changes, and product updates.</p>
         </div>
-      </aside>
+      </header>
 
-      <main className="main-content">
-        <section className="hero-section" id="Executive-Dashboard">
-          <div>
-            <p className="eyebrow">Rajan Business Reports</p>
-            <h2>Welcome to RBR AI CoE India</h2>
-            <p className="hero-copy">
-              AI-powered insights for report opportunities, trending industries,
-              website searches, Google Ads performance, and growth decisions.
-            </p>
+      <main className="monitor-shell">
+        <section className="details-panel">
+          <div className="details-header">
+            <div>
+              <p className="eyebrow">Selected competitor</p>
+              <h2>{selectedCompetitor.name}</h2>
+              <p className="competitor-type">{selectedCompetitor.type}</p>
+            </div>
 
-            <div className="hero-actions">
-              <button onClick={() => handleNavClick("Report Opportunities")}>
-                View Report Opportunities
-              </button>
-              <button
-                className="ghost"
-                onClick={() => handleNavClick("AI Chat Assistant")}
-              >
-                Ask RBR AI
-              </button>
+            <div className="status-card">
+              <span>Status</span>
+              <strong>{selectedCompetitor.status}</strong>
             </div>
           </div>
 
-          <div className="hero-panel">
-            <p>Today’s focus</p>
-            <h3>Find high-demand reports before competitors do.</h3>
-            <div className="signal-row">
-              <span>Google Ads</span>
-              <span>Website Searches</span>
-              <span>Report Catalog</span>
+          <div className="summary-strip">
+            <div>
+              <span>Competitors monitored</span>
+              <strong>{summary.monitored}</strong>
+            </div>
+            <div>
+              <span>High activity</span>
+              <strong>{summary.highActivity}</strong>
+            </div>
+            <div>
+              <span>Signals in this view</span>
+              <strong>{summary.totalSignals}</strong>
             </div>
           </div>
-        </section>
 
-        <section className="kpi-grid">
-          {kpis.map((kpi) => (
-            <article key={kpi.label} className={`kpi-card ${kpi.tone}`}>
-              <p>{kpi.label}</p>
-              <h3>{kpi.value}</h3>
-              <span>{kpi.change}</span>
-            </article>
-          ))}
-        </section>
-
-        <section className="dashboard-grid">
-          <article className="panel large" id="Report-Opportunities">
-            <div className="panel-heading">
-              <div>
-                <p className="eyebrow">Opportunity Engine</p>
-                <h3>High Demand Report Opportunities</h3>
-              </div>
-              <span className="pill">AI Ranked</span>
+          <section className="monitor-section news-section">
+            <div className="section-icon news">
+              <NewsIcon />
             </div>
 
-            <div className="opportunity-list">
-              {opportunities.map((item) => (
+            <div className="section-content">
+              <h3>Latest news in internet about {selectedCompetitor.name}</h3>
+
+              <ol className="news-list">
+                {selectedCompetitor.news.map((item, index) => (
+                  <li key={`${selectedCompetitor.id}-news-${index}`}>
+                    <span>{item.text}</span>
+                    <small>
+                      Source: <SourceLink>{item.source}</SourceLink>
+                    </small>
+                  </li>
+                ))}
+              </ol>
+            </div>
+          </section>
+
+          <MetricLine metric={selectedCompetitor.reportCount} iconType="chart" />
+
+          <MetricLine metric={selectedCompetitor.employeeCount} iconType="people" />
+
+          <section className="monitor-section updates-section">
+            <div className="section-icon updates">
+              <BoxIcon />
+            </div>
+
+            <div className="section-content">
+              <h3>Product updates / Company updates</h3>
+
+              <ol className="updates-list">
+                {selectedCompetitor.updates.map((item, index) => (
+                  <li key={`${selectedCompetitor.id}-update-${index}`}>
+                    <span>{item.text}</span>
+                    <small>
+                      {item.date ? <>On date: {item.date}. </> : null}
+                      Source: <SourceLink>{item.source}</SourceLink>
+                    </small>
+                  </li>
+                ))}
+              </ol>
+            </div>
+          </section>
+        </section>
+
+        <aside className="competitor-panel">
+          <div className="competitor-panel-heading">
+            <p className="eyebrow">Monitoring list</p>
+            <h3>Competitors</h3>
+          </div>
+
+          <div className="competitor-list">
+            {competitors.map((competitor) => {
+              const isSelected = competitor.id === selectedId;
+
+              return (
                 <button
-                  key={item.title}
-                  className={`opportunity-card ${
-                    selectedOpportunity.title === item.title ? "selected" : ""
-                  }`}
-                  onClick={() => setSelectedOpportunity(item)}
+                  key={competitor.id}
+                  className={`competitor-card ${isSelected ? "selected" : ""}`}
+                  onClick={() => setSelectedId(competitor.id)}
+                  aria-pressed={isSelected}
                 >
-                  <div>
-                    <h4>{item.title}</h4>
-                    <p>{item.reason}</p>
-                    <div className="source-row">
-                      {item.sources.map((source) => (
-                        <span key={source}>{source}</span>
-                      ))}
-                    </div>
-                  </div>
-                  <div className="score-block">
-                    <strong>{item.demand}</strong>
-                    <small>Demand</small>
-                  </div>
+                  <span className="competitor-icon">
+                    <GlobeIcon />
+                  </span>
+
+                  <span className="competitor-copy">
+                    <strong>{competitor.name}</strong>
+                    <small>{competitor.status}</small>
+                  </span>
+
+                  <span className="chevron">›</span>
                 </button>
-              ))}
-            </div>
-          </article>
+              );
+            })}
+          </div>
 
-          <article className="panel">
-            <div className="panel-heading">
-              <div>
-                <p className="eyebrow">Selected Opportunity</p>
-                <h3>{selectedOpportunity.title}</h3>
-              </div>
-            </div>
-
-            <div className="selected-box">
-              <p className="status-text">{selectedOpportunity.status}</p>
-              <div className="big-score">{selectedOpportunity.demand}</div>
-              <p>{selectedOpportunity.reason}</p>
-              <button className="full-button">Prepare Report Plan</button>
-            </div>
-          </article>
-
-          <article className="panel" id="Market-Intelligence">
-            <div className="panel-heading">
-              <div>
-                <p className="eyebrow">Market Intelligence</p>
-                <h3>Top Trending Industries Right Now?</h3>
-              </div>
-            </div>
-
-            <div className="trend-list">
-              {trendingIndustries.map((industry) => (
-                <div className="trend-row" key={industry.name}>
-                  <div>
-                    <strong>{industry.name}</strong>
-                    <span>{industry.note}</span>
-                  </div>
-                  <div className="bar-track">
-                    <div
-                      className="bar-fill"
-                      style={{ width: `${industry.score}%` }}
-                    />
-                  </div>
-                  <b>{industry.score}</b>
-                </div>
-              ))}
-            </div>
-          </article>
-
-          <article className="panel" id="Website-Insights">
-            <div className="panel-heading">
-              <div>
-                <p className="eyebrow">Website Demand</p>
-                <h3>What are users searching most on our website?</h3>
-              </div>
-            </div>
-
-            <div className="search-list">
-              {websiteSearches.map((item, index) => (
-                <div className="search-row" key={item.query}>
-                  <span className="rank">{index + 1}</span>
-                  <div>
-                    <strong>{item.query}</strong>
-                    <p>{item.intent}</p>
-                  </div>
-                  <b>{item.count}</b>
-                </div>
-              ))}
-            </div>
-          </article>
-
-          <article className="panel wide" id="Google-Ads-Insights">
-            <div className="panel-heading">
-              <div>
-                <p className="eyebrow">Paid Traffic Intelligence</p>
-                <h3>Google Ads Performance Overview</h3>
-              </div>
-              <span className="pill green">{totalAdLeads} leads</span>
-            </div>
-
-            <div className="table-wrap">
-              <table>
-                <thead>
-                  <tr>
-                    <th>Campaign</th>
-                    <th>Clicks</th>
-                    <th>Cost</th>
-                    <th>Leads</th>
-                    <th>Quality</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {adsRows.map((row) => (
-                    <tr key={row.campaign}>
-                      <td>{row.campaign}</td>
-                      <td>{row.clicks}</td>
-                      <td>{row.cost}</td>
-                      <td>{row.leads}</td>
-                      <td>
-                        <span
-                          className={`quality ${
-                            row.quality === "High" ? "high" : "medium"
-                          }`}
-                        >
-                          {row.quality}
-                        </span>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          </article>
-
-          <article className="panel" id="Reports-Performance">
-            <div className="panel-heading">
-              <div>
-                <p className="eyebrow">Report Sales Signals</p>
-                <h3>Reports Performance</h3>
-              </div>
-            </div>
-
-            <div className="report-list">
-              {reportPerformance.map((item) => {
-                const conversion =
-                  item.views === 0 ? 0 : ((item.buys / item.views) * 100).toFixed(1);
-
-                return (
-                  <div className="report-row" key={item.report}>
-                    <div>
-                      <strong>{item.report}</strong>
-                      <span>
-                        {item.views} views · {item.buys} buys
-                      </span>
-                    </div>
-                    <b>{conversion}%</b>
-                  </div>
-                );
-              })}
-            </div>
-          </article>
-
-          <article className="panel" id="AI-Chat-Assistant">
-            <div className="panel-heading">
-              <div>
-                <p className="eyebrow">AI Assistant</p>
-                <h3>Ask RBR AI</h3>
-              </div>
-            </div>
-
-            <div className="quick-prompts">
-              <button onClick={() => sendMessage("high demand report opportunities")}>
-                High demand report opportunities
-              </button>
-              <button onClick={() => sendMessage("top trending industries right now")}>
-                Top trending industries
-              </button>
-              <button
-                onClick={() =>
-                  sendMessage("What are users searching most on our website?")
-                }
-              >
-                Website searches
-              </button>
-            </div>
-
-            <div className="chat-box">
-              {messages.map((message, index) => (
-                <div key={index} className={`message ${message.role}`}>
-                  {message.text}
-                </div>
-              ))}
-            </div>
-
-            <div className="chat-input-row">
-              <input
-                value={chatInput}
-                onChange={(event) => setChatInput(event.target.value)}
-                placeholder="Ask about sales, trends, searches, ads, or reports..."
-                onKeyDown={(event) => {
-                  if (event.key === "Enter") sendMessage();
-                }}
-              />
-              <button onClick={() => sendMessage()}>Ask</button>
-            </div>
-          </article>
-
-          <article className="panel" id="Alerts-&-Notifications">
-            <div className="panel-heading">
-              <div>
-                <p className="eyebrow">Action Center</p>
-                <h3>Alerts & Notifications</h3>
-              </div>
-            </div>
-
-            <div className="alert-list">
-              {alerts.map((alert) => (
-                <div className="alert-card" key={alert.title}>
-                  <span>{alert.level}</span>
-                  <strong>{alert.title}</strong>
-                  <p>{alert.description}</p>
-                </div>
-              ))}
-            </div>
-          </article>
-
-          <article className="panel" id="Knowledge-Hub">
-            <div className="panel-heading">
-              <div>
-                <p className="eyebrow">Knowledge Hub</p>
-                <h3>AI Insights Summary</h3>
-              </div>
-            </div>
-
-            <ul className="insight-list">
-              {aiInsights.map((insight) => (
-                <li key={insight}>{insight}</li>
-              ))}
-            </ul>
-          </article>
-
-          <article className="panel wide" id="Settings">
-            <div className="panel-heading">
-              <div>
-                <p className="eyebrow">System Setup</p>
-                <h3>Future Data Connections</h3>
-              </div>
-            </div>
-
-            <div className="connection-grid">
-              <div>
-                <strong>Google Trends</strong>
-                <p>Connect trending industry signals.</p>
-              </div>
-              <div>
-                <strong>Google Ads</strong>
-                <p>Connect campaign, keyword, and search term performance.</p>
-              </div>
-              <div>
-                <strong>Website Searches</strong>
-                <p>Connect S3 daily website search logs.</p>
-              </div>
-              <div>
-                <strong>Report Catalog</strong>
-                <p>Connect existing RBR report list and sales performance.</p>
-              </div>
-              <div>
-                <strong>ChatGPT</strong>
-                <p>Connect AI recommendations and opportunity scoring.</p>
-              </div>
-              <div>
-                <strong>DynamoDB</strong>
-                <p>Connect report metadata, buyers, and company records.</p>
-              </div>
-            </div>
-          </article>
-        </section>
+          <div className="future-note">
+            <span>Next integration</span>
+            <p>
+              Connect this module to Google Search, LinkedIn page checks, website
+              crawlers, and report-count comparison APIs.
+            </p>
+          </div>
+        </aside>
       </main>
     </div>
   );
