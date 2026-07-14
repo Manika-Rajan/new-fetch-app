@@ -205,7 +205,12 @@ function AnalyticsIcon() {
       <rect x="6" y="25" width="7" height="15" rx="2" />
       <rect x="19" y="17" width="7" height="23" rx="2" />
       <rect x="32" y="9" width="7" height="31" rx="2" />
-      <path d="M8 21L22 10L35 5" fill="none" strokeWidth="4" strokeLinecap="round" />
+      <path
+        d="M8 21L22 10L35 5"
+        fill="none"
+        strokeWidth="4"
+        strokeLinecap="round"
+      />
     </svg>
   );
 }
@@ -227,8 +232,21 @@ function GlobeIcon() {
 function NewsIcon() {
   return (
     <svg viewBox="0 0 48 48" aria-hidden="true">
-      <rect x="10" y="9" width="24" height="30" rx="2" fill="none" strokeWidth="3" />
-      <path d="M16 17h12M16 24h12M16 31h8M34 16h4v22a3 3 0 0 1-3 3h-1" fill="none" strokeWidth="3" strokeLinecap="round" />
+      <rect
+        x="10"
+        y="9"
+        width="24"
+        height="30"
+        rx="2"
+        fill="none"
+        strokeWidth="3"
+      />
+      <path
+        d="M16 17h12M16 24h12M16 31h8M34 16h4v22a3 3 0 0 1-3 3h-1"
+        fill="none"
+        strokeWidth="3"
+        strokeLinecap="round"
+      />
     </svg>
   );
 }
@@ -237,7 +255,12 @@ function ChartIcon() {
   return (
     <svg viewBox="0 0 48 48" aria-hidden="true">
       <path d="M10 39h29" fill="none" strokeWidth="3" strokeLinecap="round" />
-      <path d="M15 34V22M24 34V13M33 34V26" fill="none" strokeWidth="4" strokeLinecap="round" />
+      <path
+        d="M15 34V22M24 34V13M33 34V26"
+        fill="none"
+        strokeWidth="4"
+        strokeLinecap="round"
+      />
     </svg>
   );
 }
@@ -247,8 +270,18 @@ function PeopleIcon() {
     <svg viewBox="0 0 48 48" aria-hidden="true">
       <circle cx="18" cy="17" r="6" fill="none" strokeWidth="3" />
       <circle cx="32" cy="18" r="5" fill="none" strokeWidth="3" />
-      <path d="M8 39v-4c0-6 4-10 10-10s10 4 10 10v4" fill="none" strokeWidth="3" strokeLinecap="round" />
-      <path d="M29 28c5 1 8 4 8 9v2" fill="none" strokeWidth="3" strokeLinecap="round" />
+      <path
+        d="M8 39v-4c0-6 4-10 10-10s10 4 10 10v4"
+        fill="none"
+        strokeWidth="3"
+        strokeLinecap="round"
+      />
+      <path
+        d="M29 28c5 1 8 4 8 9v2"
+        fill="none"
+        strokeWidth="3"
+        strokeLinecap="round"
+      />
     </svg>
   );
 }
@@ -256,15 +289,29 @@ function PeopleIcon() {
 function BoxIcon() {
   return (
     <svg viewBox="0 0 48 48" aria-hidden="true">
-      <path d="M24 5l16 8v20l-16 10L8 33V13l16-8z" fill="none" strokeWidth="3" strokeLinejoin="round" />
-      <path d="M8 13l16 9 16-9M24 22v21" fill="none" strokeWidth="3" strokeLinecap="round" />
+      <path
+        d="M24 5l16 8v20l-16 10L8 33V13l16-8z"
+        fill="none"
+        strokeWidth="3"
+        strokeLinejoin="round"
+      />
+      <path
+        d="M8 13l16 9 16-9M24 22v21"
+        fill="none"
+        strokeWidth="3"
+        strokeLinecap="round"
+      />
     </svg>
   );
 }
 
 function SourceLink({ children = "link" }) {
   return (
-    <a className="source-link" href="#source" onClick={(event) => event.preventDefault()}>
+    <a
+      className="source-link"
+      href="#source"
+      onClick={(event) => event.preventDefault()}
+    >
       {children}
     </a>
   );
@@ -280,7 +327,8 @@ function MetricLine({ metric, iconType }) {
       <div className="section-content">
         <h3>{metric.label}</h3>
         <p className="metric-text">
-          Changed from <strong>{metric.from}</strong> to <strong>{metric.to}</strong>
+          Changed from <strong>{metric.from}</strong> to{" "}
+          <strong>{metric.to}</strong>
           <span className="delta-badge">{metric.change}</span>
         </p>
       </div>
@@ -292,18 +340,20 @@ function App() {
   const [selectedId, setSelectedId] = useState("marketreports");
 
   const selectedCompetitor = useMemo(
-    () => competitors.find((competitor) => competitor.id === selectedId) || competitors[0],
+    () =>
+      competitors.find((competitor) => competitor.id === selectedId) ||
+      competitors[0],
     [selectedId]
   );
 
   const summary = useMemo(() => {
     return {
       monitored: competitors.length,
-      highActivity: competitors.filter((item) => item.status.toLowerCase().includes("high")).length,
+      highActivity: competitors.filter((item) =>
+        item.status.toLowerCase().includes("high")
+      ).length,
       totalSignals:
-        selectedCompetitor.news.length +
-        selectedCompetitor.updates.length +
-        2,
+        selectedCompetitor.news.length + selectedCompetitor.updates.length + 2,
     };
   }, [selectedCompetitor]);
 
@@ -321,7 +371,10 @@ function App() {
 
         <div className="module-title">
           <h2>Competitor Monitoring</h2>
-          <p>Track competitor news, website changes, LinkedIn changes, and product updates.</p>
+          <p>
+            Track competitor news, website changes, LinkedIn changes, and product
+            updates.
+          </p>
         </div>
       </header>
 
@@ -355,31 +408,6 @@ function App() {
             </div>
           </div>
 
-          <section className="monitor-section news-section">
-            <div className="section-icon news">
-              <NewsIcon />
-            </div>
-
-            <div className="section-content">
-              <h3>Latest news in internet about {selectedCompetitor.name}</h3>
-
-              <ol className="news-list">
-                {selectedCompetitor.news.map((item, index) => (
-                  <li key={`${selectedCompetitor.id}-news-${index}`}>
-                    <span>{item.text}</span>
-                    <small>
-                      Source: <SourceLink>{item.source}</SourceLink>
-                    </small>
-                  </li>
-                ))}
-              </ol>
-            </div>
-          </section>
-
-          <MetricLine metric={selectedCompetitor.reportCount} iconType="chart" />
-
-          <MetricLine metric={selectedCompetitor.employeeCount} iconType="people" />
-
           <section className="monitor-section updates-section">
             <div className="section-icon updates">
               <BoxIcon />
@@ -401,6 +429,37 @@ function App() {
               </ol>
             </div>
           </section>
+
+          <section className="monitor-section news-section">
+            <div className="section-icon news">
+              <NewsIcon />
+            </div>
+
+            <div className="section-content">
+              <h3>Latest news in internet about {selectedCompetitor.name}</h3>
+
+              <ol className="news-list">
+                {selectedCompetitor.news.map((item, index) => (
+                  <li key={`${selectedCompetitor.id}-news-${index}`}>
+                    <span>{item.text}</span>
+                    <small>
+                      Source: <SourceLink>{item.source}</SourceLink>
+                    </small>
+                  </li>
+                ))}
+              </ol>
+            </div>
+          </section>
+
+          <MetricLine
+            metric={selectedCompetitor.reportCount}
+            iconType="chart"
+          />
+
+          <MetricLine
+            metric={selectedCompetitor.employeeCount}
+            iconType="people"
+          />
         </section>
 
         <aside className="competitor-panel">
@@ -416,7 +475,9 @@ function App() {
               return (
                 <button
                   key={competitor.id}
-                  className={`competitor-card ${isSelected ? "selected" : ""}`}
+                  className={`competitor-card ${
+                    isSelected ? "selected" : ""
+                  }`}
                   onClick={() => setSelectedId(competitor.id)}
                   aria-pressed={isSelected}
                 >
