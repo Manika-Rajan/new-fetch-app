@@ -1,201 +1,33 @@
-import React, { useMemo, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import "./App.css";
 
-const competitors = [
+const COMPETITOR_API_URL = "https://d1qzxptevf.execute-api.ap-south-1.amazonaws.com/prod/coe/competitors/latest";
+
+const fallbackCompetitors = [
   {
-    id: "marketreports",
-    name: "MarketReports.com",
-    type: "Commercial report marketplace",
-    status: "High activity",
-    news: [
-      {
-        text: "Recently got $100 billion funding.",
-        source: "link",
-      },
-      {
-        text: "Launched new branch in UK.",
-        source: "link",
-      },
-    ],
+    id: "loading",
+    competitor_id: "loading",
+    name: "Loading competitors...",
+    domain: "",
+    type: "Please wait",
+    status: "Loading",
+    priority: 999,
+    last_checked_at: null,
+    updated_at: "",
+    news: [],
+    updates: [],
     reportCount: {
       label: "Website report count change",
-      from: "12,000",
-      to: "15,000",
-      change: "+3,000",
+      from: "0",
+      to: "0",
+      change: "0",
     },
     employeeCount: {
       label: "LinkedIn employee count change",
-      from: "100",
-      to: "10,000",
-      change: "+9,900",
+      from: "0",
+      to: "0",
+      change: "0",
     },
-    updates: [
-      {
-        text: 'Added "Automobile industry" in the categories of the reports.',
-        date: "13-July-2026",
-        source: "link",
-      },
-      {
-        text: "Stock value of the company rose by 2 points, currently at 138.",
-        source: "link",
-      },
-    ],
-  },
-  {
-    id: "ibisworld",
-    name: "IBISWorld.com",
-    type: "Industry research platform",
-    status: "Moderate activity",
-    news: [
-      {
-        text: "Expanded new research coverage for emerging business sectors.",
-        source: "link",
-      },
-      {
-        text: "Published updated industry outlook pages for small businesses.",
-        source: "link",
-      },
-    ],
-    reportCount: {
-      label: "Website report count change",
-      from: "9,400",
-      to: "9,850",
-      change: "+450",
-    },
-    employeeCount: {
-      label: "LinkedIn employee count change",
-      from: "620",
-      to: "690",
-      change: "+70",
-    },
-    updates: [
-      {
-        text: "Added new industry analysis pages for B2B services.",
-        date: "10-July-2026",
-        source: "link",
-      },
-      {
-        text: "Updated pricing and subscription communication on selected pages.",
-        source: "link",
-      },
-    ],
-  },
-  {
-    id: "marketresearch",
-    name: "MarketResearch.com",
-    type: "Report aggregation platform",
-    status: "Watch closely",
-    news: [
-      {
-        text: "Started promoting new syndicated research categories.",
-        source: "link",
-      },
-      {
-        text: "Added new publisher partnerships in selected report verticals.",
-        source: "link",
-      },
-    ],
-    reportCount: {
-      label: "Website report count change",
-      from: "28,500",
-      to: "29,100",
-      change: "+600",
-    },
-    employeeCount: {
-      label: "LinkedIn employee count change",
-      from: "210",
-      to: "235",
-      change: "+25",
-    },
-    updates: [
-      {
-        text: "Added new reports in food processing and specialty chemicals.",
-        date: "11-July-2026",
-        source: "link",
-      },
-      {
-        text: "Refreshed several category landing pages with updated report lists.",
-        source: "link",
-      },
-    ],
-  },
-  {
-    id: "niti",
-    name: "NITI Aayog",
-    type: "Policy and public research source",
-    status: "Policy signal source",
-    news: [
-      {
-        text: "Published new policy discussion material for Indian growth sectors.",
-        source: "link",
-      },
-      {
-        text: "Released new public data points useful for industry opportunity tracking.",
-        source: "link",
-      },
-    ],
-    reportCount: {
-      label: "Website report count change",
-      from: "1,240",
-      to: "1,310",
-      change: "+70",
-    },
-    employeeCount: {
-      label: "LinkedIn employee count change",
-      from: "1,100",
-      to: "1,170",
-      change: "+70",
-    },
-    updates: [
-      {
-        text: "Added policy-linked materials relevant to manufacturing and exports.",
-        date: "09-July-2026",
-        source: "link",
-      },
-      {
-        text: "Updated selected public resource pages with newer references.",
-        source: "link",
-      },
-    ],
-  },
-  {
-    id: "corpium",
-    name: "Corpium.co.uk",
-    type: "UK competitor / reference site",
-    status: "Low activity",
-    news: [
-      {
-        text: "Updated company service pages with new market-entry messaging.",
-        source: "link",
-      },
-      {
-        text: "Added new website content around international expansion.",
-        source: "link",
-      },
-    ],
-    reportCount: {
-      label: "Website report count change",
-      from: "830",
-      to: "890",
-      change: "+60",
-    },
-    employeeCount: {
-      label: "LinkedIn employee count change",
-      from: "42",
-      to: "49",
-      change: "+7",
-    },
-    updates: [
-      {
-        text: "Added new service page for international company research.",
-        date: "07-July-2026",
-        source: "link",
-      },
-      {
-        text: "Changed homepage content and call-to-action positioning.",
-        source: "link",
-      },
-    ],
   },
 ];
 
@@ -305,12 +137,25 @@ function BoxIcon() {
   );
 }
 
-function SourceLink({ children = "link" }) {
+function SourceLink({ children = "link", url }) {
+  if (!url) {
+    return (
+      <a
+        className="source-link"
+        href="#source"
+        onClick={(event) => event.preventDefault()}
+      >
+        {children}
+      </a>
+    );
+  }
+
   return (
     <a
       className="source-link"
-      href="#source"
-      onClick={(event) => event.preventDefault()}
+      href={url}
+      target="_blank"
+      rel="noreferrer"
     >
       {children}
     </a>
@@ -325,37 +170,112 @@ function MetricLine({ metric, iconType }) {
       </div>
 
       <div className="section-content">
-        <h3>{metric.label}</h3>
+        <h3>{metric?.label || "Metric change"}</h3>
         <p className="metric-text">
-          Changed from <strong>{metric.from}</strong> to{" "}
-          <strong>{metric.to}</strong>
-          <span className="delta-badge">{metric.change}</span>
+          Changed from <strong>{metric?.from || "0"}</strong> to{" "}
+          <strong>{metric?.to || "0"}</strong>
+          <span className="delta-badge">{metric?.change || "0"}</span>
         </p>
       </div>
     </section>
   );
 }
 
-function App() {
-  const [selectedId, setSelectedId] = useState("marketreports");
+function EmptyListMessage({ text }) {
+  return <p className="metric-text">{text}</p>;
+}
 
-  const selectedCompetitor = useMemo(
-    () =>
-      competitors.find((competitor) => competitor.id === selectedId) ||
-      competitors[0],
-    [selectedId]
-  );
+function App() {
+  const [competitors, setCompetitors] = useState(fallbackCompetitors);
+  const [selectedId, setSelectedId] = useState("");
+  const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState("");
+
+  useEffect(() => {
+    let isMounted = true;
+
+    async function loadCompetitors() {
+      try {
+        setLoading(true);
+        setLoadError("");
+
+        const response = await fetch(COMPETITOR_API_URL);
+
+        if (!response.ok) {
+          throw new Error(`API failed with status ${response.status}`);
+        }
+
+        const data = await response.json();
+        const apiCompetitors = Array.isArray(data.competitors)
+          ? data.competitors
+          : [];
+
+        if (!isMounted) return;
+
+        if (apiCompetitors.length === 0) {
+          setCompetitors([]);
+          setSelectedId("");
+          setLoadError("No competitor records found in latest table.");
+          return;
+        }
+
+        setCompetitors(apiCompetitors);
+        setSelectedId(apiCompetitors[0].id || apiCompetitors[0].competitor_id);
+      } catch (error) {
+        if (!isMounted) return;
+
+        console.error("Failed to load competitors:", error);
+        setCompetitors([]);
+        setSelectedId("");
+        setLoadError(
+          "Unable to load competitor data. Please check the API Gateway URL and CORS settings."
+        );
+      } finally {
+        if (isMounted) {
+          setLoading(false);
+        }
+      }
+    }
+
+    loadCompetitors();
+
+    return () => {
+      isMounted = false;
+    };
+  }, []);
+
+  const selectedCompetitor = useMemo(() => {
+    if (!competitors.length) return null;
+
+    return (
+      competitors.find(
+        (competitor) =>
+          competitor.id === selectedId ||
+          competitor.competitor_id === selectedId
+      ) || competitors[0]
+    );
+  }, [competitors, selectedId]);
 
   const summary = useMemo(() => {
+    if (!selectedCompetitor) {
+      return {
+        monitored: 0,
+        highActivity: 0,
+        totalSignals: 0,
+      };
+    }
+
     return {
       monitored: competitors.length,
       highActivity: competitors.filter((item) =>
-        item.status.toLowerCase().includes("high")
+        String(item.status || "").toLowerCase().includes("high")
       ).length,
       totalSignals:
-        selectedCompetitor.news.length + selectedCompetitor.updates.length + 2,
+        (selectedCompetitor.news || []).length +
+        (selectedCompetitor.updates || []).length +
+        2,
     };
-  }, [selectedCompetitor]);
+  }, [competitors, selectedCompetitor]);
 
   return (
     <div className="coe-monitor-page">
@@ -380,86 +300,132 @@ function App() {
 
       <main className="monitor-shell">
         <section className="details-panel">
-          <div className="details-header">
-            <div>
-              <p className="eyebrow">Selected competitor</p>
-              <h2>{selectedCompetitor.name}</h2>
-              <p className="competitor-type">{selectedCompetitor.type}</p>
+          {loading ? (
+            <div className="details-header">
+              <div>
+                <p className="eyebrow">Loading</p>
+                <h2>Loading competitors...</h2>
+                <p className="competitor-type">
+                  Fetching latest records from DynamoDB.
+                </p>
+              </div>
             </div>
-
-            <div className="status-card">
-              <span>Status</span>
-              <strong>{selectedCompetitor.status}</strong>
+          ) : loadError ? (
+            <div className="details-header">
+              <div>
+                <p className="eyebrow">Error</p>
+                <h2>Unable to load data</h2>
+                <p className="competitor-type">{loadError}</p>
+              </div>
             </div>
-          </div>
+          ) : selectedCompetitor ? (
+            <>
+              <div className="details-header">
+                <div>
+                  <p className="eyebrow">Selected competitor</p>
+                  <h2>{selectedCompetitor.name}</h2>
+                  <p className="competitor-type">{selectedCompetitor.type}</p>
+                </div>
 
-          <div className="summary-strip">
-            <div>
-              <span>Competitors monitored</span>
-              <strong>{summary.monitored}</strong>
+                <div className="status-card">
+                  <span>Status</span>
+                  <strong>{selectedCompetitor.status}</strong>
+                </div>
+              </div>
+
+              <div className="summary-strip">
+                <div>
+                  <span>Competitors monitored</span>
+                  <strong>{summary.monitored}</strong>
+                </div>
+                <div>
+                  <span>High activity</span>
+                  <strong>{summary.highActivity}</strong>
+                </div>
+                <div>
+                  <span>Signals in this view</span>
+                  <strong>{summary.totalSignals}</strong>
+                </div>
+              </div>
+
+              <section className="monitor-section updates-section">
+                <div className="section-icon updates">
+                  <BoxIcon />
+                </div>
+
+                <div className="section-content">
+                  <h3>Product updates / Company updates</h3>
+
+                  {(selectedCompetitor.updates || []).length > 0 ? (
+                    <ol className="updates-list">
+                      {selectedCompetitor.updates.map((item, index) => (
+                        <li key={`${selectedCompetitor.id}-update-${index}`}>
+                          <span>{item.text}</span>
+                          <small>
+                            {item.date ? <>On date: {item.date}. </> : null}
+                            Source:{" "}
+                            <SourceLink url={item.source_url}>
+                              {item.source || "link"}
+                            </SourceLink>
+                          </small>
+                        </li>
+                      ))}
+                    </ol>
+                  ) : (
+                    <EmptyListMessage text="No product or company updates found yet. This will populate after the daily collector runs." />
+                  )}
+                </div>
+              </section>
+
+              <section className="monitor-section news-section">
+                <div className="section-icon news">
+                  <NewsIcon />
+                </div>
+
+                <div className="section-content">
+                  <h3>Latest news in internet about {selectedCompetitor.name}</h3>
+
+                  {(selectedCompetitor.news || []).length > 0 ? (
+                    <ol className="news-list">
+                      {selectedCompetitor.news.map((item, index) => (
+                        <li key={`${selectedCompetitor.id}-news-${index}`}>
+                          <span>{item.text}</span>
+                          <small>
+                            Source:{" "}
+                            <SourceLink url={item.source_url}>
+                              {item.source || "link"}
+                            </SourceLink>
+                          </small>
+                        </li>
+                      ))}
+                    </ol>
+                  ) : (
+                    <EmptyListMessage text="No news items found yet. This will populate after the daily collector runs." />
+                  )}
+                </div>
+              </section>
+
+              <MetricLine
+                metric={selectedCompetitor.reportCount}
+                iconType="chart"
+              />
+
+              <MetricLine
+                metric={selectedCompetitor.employeeCount}
+                iconType="people"
+              />
+            </>
+          ) : (
+            <div className="details-header">
+              <div>
+                <p className="eyebrow">No records</p>
+                <h2>No competitors found</h2>
+                <p className="competitor-type">
+                  Please add records to the latest table.
+                </p>
+              </div>
             </div>
-            <div>
-              <span>High activity</span>
-              <strong>{summary.highActivity}</strong>
-            </div>
-            <div>
-              <span>Signals in this view</span>
-              <strong>{summary.totalSignals}</strong>
-            </div>
-          </div>
-
-          <section className="monitor-section updates-section">
-            <div className="section-icon updates">
-              <BoxIcon />
-            </div>
-
-            <div className="section-content">
-              <h3>Product updates / Company updates</h3>
-
-              <ol className="updates-list">
-                {selectedCompetitor.updates.map((item, index) => (
-                  <li key={`${selectedCompetitor.id}-update-${index}`}>
-                    <span>{item.text}</span>
-                    <small>
-                      {item.date ? <>On date: {item.date}. </> : null}
-                      Source: <SourceLink>{item.source}</SourceLink>
-                    </small>
-                  </li>
-                ))}
-              </ol>
-            </div>
-          </section>
-
-          <section className="monitor-section news-section">
-            <div className="section-icon news">
-              <NewsIcon />
-            </div>
-
-            <div className="section-content">
-              <h3>Latest news in internet about {selectedCompetitor.name}</h3>
-
-              <ol className="news-list">
-                {selectedCompetitor.news.map((item, index) => (
-                  <li key={`${selectedCompetitor.id}-news-${index}`}>
-                    <span>{item.text}</span>
-                    <small>
-                      Source: <SourceLink>{item.source}</SourceLink>
-                    </small>
-                  </li>
-                ))}
-              </ol>
-            </div>
-          </section>
-
-          <MetricLine
-            metric={selectedCompetitor.reportCount}
-            iconType="chart"
-          />
-
-          <MetricLine
-            metric={selectedCompetitor.employeeCount}
-            iconType="people"
-          />
+          )}
         </section>
 
         <aside className="competitor-panel">
@@ -470,16 +436,18 @@ function App() {
 
           <div className="competitor-list">
             {competitors.map((competitor) => {
-              const isSelected = competitor.id === selectedId;
+              const competitorId = competitor.id || competitor.competitor_id;
+              const isSelected = competitorId === selectedId;
 
               return (
                 <button
-                  key={competitor.id}
+                  key={competitorId}
                   className={`competitor-card ${
                     isSelected ? "selected" : ""
                   }`}
-                  onClick={() => setSelectedId(competitor.id)}
+                  onClick={() => setSelectedId(competitorId)}
                   aria-pressed={isSelected}
+                  disabled={loading}
                 >
                   <span className="competitor-icon">
                     <GlobeIcon />
