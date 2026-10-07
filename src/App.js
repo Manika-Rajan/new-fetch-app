@@ -657,8 +657,10 @@ function SegmentView({ competitor, segmentId }) {
       ["Keyword overlap", segment.keyword_overlap],
     ],
     catalogue: [
-      ["Verified report count", segment.report_count_verified ? segment.estimated_report_count : null],
-      ["Report count verified", segment.report_count_verified],
+      ["Observed / verified report count", segment.report_count_verified ? segment.estimated_report_count : null],
+      ["Count method", segment.report_count_method && segment.report_count_method !== "none" ? segment.report_count_method : null],
+      ["Publicly claimed report count", segment.publicly_claimed_report_count ?? null],
+      ["Public claim text", segment.publicly_claimed_report_count_text || null],
       ["New reports in 30 days", segment.new_reports_30d],
       ["Top categories", segment.top_categories],
       ["Industries", segment.industries],
@@ -861,7 +863,7 @@ function PrimarySegmentCard({ competitor, segmentId, selected, onSelect }) {
     catalogue: {
       title: "Report catalogue",
       subtitle: "What markets, industries and geographies are they covering?",
-      stat1Label: "Verified report count",
+      stat1Label: "Observed / verified report count",
       stat1: segment.report_count_verified ? segment.estimated_report_count : null,
       stat2Label: "Top categories",
       stat2: Array.isArray(segment.top_categories)
