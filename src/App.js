@@ -718,6 +718,18 @@ function SegmentView({ competitor, segmentId }) {
   };
 
   const cards = layouts[segmentId] || [];
+
+  const hasMeaningfulValue = (value) => {
+    if (value === null || value === undefined || value === "") return false;
+    if (Array.isArray(value)) return value.length > 0;
+    return true;
+  };
+
+  const populatedCards = cards.filter(([, value]) => hasMeaningfulValue(value));
+  const missingLabels = cards
+    .filter(([, value]) => !hasMeaningfulValue(value))
+    .map(([title]) => title);
+
   const implication =
     segment.rbr_implication ||
     (segmentId === "threat" && Array.isArray(segment.recommended_actions)
