@@ -672,13 +672,207 @@ function SegmentView({ competitor, segmentId }) {
   );
 }
 
-function App() {
-  const [competitors, setCompetitors] = useState(
-    mergeCompetitorUniverse([])
+function PrimarySegmentCard({ competitor, segmentId, selected, onSelect }) {
+  const segment = competitor?.segments?.[segmentId] || {};
+
+  const configs = {
+    search: {
+      title: "Search visibility",
+      subtitle: "Can customers find them before they find RBR?",
+      stat1Label: "Organic visibility",
+      stat1: segment.organic_visibility ?? segment.visibility,
+      stat2Label: "RBR overlap keywords",
+      stat2: segment.keyword_overlap ?? segment.keywords_overlap,
+    },
+    catalog: {
+      title: "Report catalogue",
+      subtitle: "What markets and reports are they selling?",
+      stat1Label: "Current reports",
+      stat1: segment.report_count ?? competitor?.reportCount?.to,
+      stat2Label: "New reports",
+      stat2: segment.new_reports ?? segment.added_reports,
+    },
+    pricing: {
+      title: "Pricing & offers",
+      subtitle: "What does the visitor see before deciding to buy?",
+      stat1Label: "Typical price",
+      stat1: segment.typical_price ?? segment.price,
+      stat2Label: "Offer / discount",
+      stat2: segment.offer ?? segment.discount,
+    },
+    journey: {
+      title: "Purchase journey",
+      subtitle: "How do they move a visitor toward enquiry or payment?",
+      stat1Label: "Primary CTA",
+      stat1: segment.primary_cta ?? segment.cta,
+      stat2Label: "Direct checkout",
+      stat2: segment.direct_checkout ?? segment.checkout,
+    },
+  };
+
+  const config = configs[segmentId];
+  const hasCollectedData = Object.keys(segment).length > 0;
+
+  return (
+    <button
+      type="button"
+      onClick={onSelect}
+      aria-pressed={selected}
+      style={{
+        width: "100%",
+        textAlign: "left",
+        border: selected
+          ? "2px solid currentColor"
+          : "1px solid rgba(120,130,150,.24)",
+        borderRadius: 18,
+        padding: "18px 18px 16px",
+        background: selected
+          ? "rgba(100,120,180,.10)"
+          : "rgba(255,255,255,.025)",
+        color: "inherit",
+        cursor: "pointer",
+        font: "inherit",
+        minHeight: 190,
+        display: "flex",
+        flexDirection: "column",
+        justifyContent: "space-between",
+      }}
+    >
+      <div>
+        <div
+          style={{
+            display: "flex",
+            justifyContent: "space-between",
+            gap: 10,
+            alignItems: "flex-start",
+          }}
+        >
+          <div>
+            <span
+              style={{
+                display: "block",
+                fontSize: 11,
+                textTransform: "uppercase",
+                letterSpacing: ".08em",
+                opacity: .58,
+                marginBottom: 7,
+              }}
+            >
+              Priority analysis
+            </span>
+            <strong style={{ display: "block", fontSize: 21, lineHeight: 1.2 }}>
+              {config.title}
+            </strong>
+          </div>
+          <span style={{ opacity: .55, fontSize: 22 }}>›</span>
+        </div>
+
+        <p
+          style={{
+            margin: "9px 0 16px",
+            opacity: .68,
+            fontSize: 13,
+            lineHeight: 1.45,
+          }}
+        >
+          {config.subtitle}
+        </p>
+      </div>
+
+      <div
+        style={{
+          display: "grid",
+          gridTemplateColumns: "1fr 1fr",
+          gap: 10,
+        }}
+      >
+        <div>
+          <small style={{ display: "block", opacity: .55, marginBottom: 4 }}>
+            {config.stat1Label}
+          </small>
+          <strong style={{ fontSize: 15 }}>
+            {formatSegmentValue(config.stat1)}
+          </strong>
+        </div>
+        <div>
+          <small style={{ display: "block", opacity: .55, marginBottom: 4 }}>
+            {config.stat2Label}
+          </small>
+          <strong style={{ fontSize: 15 }}>
+            {formatSegmentValue(config.stat2)}
+          </strong>
+        </div>
+      </div>
+
+      {!hasCollectedData ? (
+        <small style={{ marginTop: 12, opacity: .48 }}>
+          Collector ready — awaiting data
+        </small>
+      ) : null}
+    </button>
   );
+}
+
+function OverviewView({ competitor }) {
+  return (
+    <>
+      <section className="monitor-section updates-section">
+        <div className="section-icon updates">
+          <BoxIcon />
+        </div>
+        <div className="section-content">
+          <h3>Product / company updates</h3>
+          {(competitor.updates || []).length > 0 ? (
+            <ol className="updates-list">
+              {competitor.updates.map((item, index) => (
+                <li key={`overview-update-${index}`}>
+                  <span>{item.text}</span>
+                  <small>
+                    {item.date ? <>On date: {item.date}. </> : null}
+                    Source: <SourceLink url={item.source_url}>{item.source || "link"}</SourceLink>
+                  </small>
+                </li>
+              ))}
+            </ol>
+          ) : (
+            <EmptyListMessage text="No product or company updates found yet." />
+          )}
+        </div>
+      </section>
+
+      <section className="monitor-section news-section">
+        <div className="section-icon news">
+          <NewsIcon />
+        </div>
+        <div className="section-content">
+          <h3>Latest internet news about {competitor.name}</h3>
+          {(competitor.news || []).length > 0 ? (
+            <ol className="news-list">
+              {competitor.news.map((item, index) => (
+                <li key={`overview-news-${index}`}>
+                  <span>{item.text}</span>
+                  <small>
+                    Source: <SourceLink url={item.source_url}>{item.source || "link"}</SourceLink>
+                  </small>
+                </li>
+              ))}
+            </ol>
+          ) : (
+            <EmptyListMessage text="No news items found yet." />
+          )}
+        </div>
+      </section>
+
+      <MetricLine metric={competitor.reportCount} iconType="chart" />
+      <MetricLine metric={competitor.employeeCount} iconType="people" />
+    </>
+  );
+}
+
+function App() {
+  const [competitors, setCompetitors] = useState(mergeCompetitorUniverse([]));
   const [selectedId, setSelectedId] = useState("marketsandmarkets");
-  const [selectedSegment, setSelectedSegment] = useState("overview");
-  const [groupFilter, setGroupFilter] = useState("core");
+  const [selectedSegment, setSelectedSegment] = useState("search");
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState("");
 
@@ -689,45 +883,26 @@ function App() {
       try {
         setLoading(true);
         setLoadError("");
-
         const response = await fetch(COMPETITOR_API_URL);
-
-        if (!response.ok) {
-          throw new Error(`API failed with status ${response.status}`);
-        }
+        if (!response.ok) throw new Error(`API failed with status ${response.status}`);
 
         const data = await response.json();
-        const apiCompetitors = Array.isArray(data.competitors)
-          ? data.competitors
-          : [];
-
+        const apiCompetitors = Array.isArray(data.competitors) ? data.competitors : [];
         if (!isMounted) return;
 
         const merged = mergeCompetitorUniverse(apiCompetitors);
         setCompetitors(merged);
-
-        // Keep the user's selected competitor where possible.
-        setSelectedId((current) => {
-          if (
-            merged.some(
-              (item) =>
-                item.id === current || item.competitor_id === current
-            )
-          ) {
-            return current;
-          }
-
-          return merged[0]?.id || merged[0]?.competitor_id || "";
-        });
+        setSelectedId((current) =>
+          merged.some((item) => item.id === current || item.competitor_id === current)
+            ? current
+            : merged[0]?.id || merged[0]?.competitor_id || ""
+        );
       } catch (error) {
         if (!isMounted) return;
-
         console.error("Failed to load competitors:", error);
-
-        // Do not make the entire RBR competitor module disappear if the API is down.
         setCompetitors(mergeCompetitorUniverse([]));
         setLoadError(
-          "Live API data is temporarily unavailable. Showing the RBR competitor universe with saved baseline classifications."
+          "Live API data is temporarily unavailable. Showing the RBR competitor universe with baseline classifications."
         );
       } finally {
         if (isMounted) setLoading(false);
@@ -735,85 +910,62 @@ function App() {
     }
 
     loadCompetitors();
-
     return () => {
       isMounted = false;
     };
   }, []);
 
-  const filteredCompetitors = useMemo(() => {
-    if (groupFilter === "all") return competitors;
-    return competitors.filter((item) => item.group === groupFilter);
-  }, [competitors, groupFilter]);
-
   const selectedCompetitor = useMemo(() => {
     if (!competitors.length) return null;
-
     return (
       competitors.find(
         (competitor) =>
-          competitor.id === selectedId ||
-          competitor.competitor_id === selectedId
+          competitor.id === selectedId || competitor.competitor_id === selectedId
       ) || competitors[0]
     );
   }, [competitors, selectedId]);
 
-  const summary = useMemo(() => {
-    if (!selectedCompetitor) {
-      return {
-        monitored: 0,
-        core: 0,
-        benchmark: 0,
-        highActivity: 0,
-        totalSignals: 0,
-      };
-    }
+  const coreCompetitors = competitors.filter((item) => item.group === "core");
+  const benchmarkCompetitors = competitors.filter((item) => item.group === "benchmark");
+  const otherCompetitors = competitors.filter(
+    (item) => item.group !== "core" && item.group !== "benchmark"
+  );
 
-    return {
-      monitored: competitors.length,
-      core: competitors.filter((item) => item.group === "core").length,
-      benchmark: competitors.filter((item) => item.group === "benchmark").length,
-      highActivity: competitors.filter((item) =>
-        String(item.status || "").toLowerCase().includes("high")
-      ).length,
-      totalSignals:
-        (selectedCompetitor.news || []).length +
-        (selectedCompetitor.updates || []).length +
-        Object.keys(selectedCompetitor.segments || {}).length,
-    };
-  }, [competitors, selectedCompetitor]);
+  const secondarySegments = ["leadgen", "trust", "marketing", "threat", "overview"];
 
   return (
     <div className="coe-monitor-page">
-      <header className="topbar">
+      <header className="topbar" style={{ paddingBottom: 14 }}>
         <div className="topbar-brand">
-          <div className="brand-icon">
-            <AnalyticsIcon />
-          </div>
+          <div className="brand-icon"><AnalyticsIcon /></div>
           <h1>RBR AI CoE India</h1>
         </div>
-
         <div className="topbar-divider" />
-
         <div className="module-title">
           <h2>Competitor Intelligence</h2>
-          <p>
-            Track RBR's closest report-selling competitors across search, catalogue,
-            pricing, purchase journey, lead generation, trust and market activity.
-          </p>
+          <p>Compare the signals that can directly improve RBR sales.</p>
         </div>
       </header>
 
-      <main className="monitor-shell">
-        <section className="details-panel">
+      <main
+        className="monitor-shell"
+        style={{
+          display: "block",
+          width: "100%",
+          maxWidth: 1500,
+          margin: "0 auto",
+        }}
+      >
+        <section className="details-panel" style={{ width: "100%" }}>
           {loadError ? (
             <div
               style={{
-                marginBottom: 14,
-                padding: "10px 14px",
+                marginBottom: 12,
+                padding: "9px 12px",
                 borderRadius: 10,
-                border: "1px solid rgba(255, 180, 0, 0.25)",
-                fontSize: 13,
+                border: "1px solid rgba(255,180,0,.25)",
+                fontSize: 12,
+                opacity: .82,
               }}
             >
               {loadError}
@@ -822,190 +974,171 @@ function App() {
 
           {selectedCompetitor ? (
             <>
-              <div className="details-header">
+              <div
+                style={{
+                  display: "grid",
+                  gridTemplateColumns: "minmax(260px, 420px) 1fr",
+                  gap: 18,
+                  alignItems: "center",
+                  marginBottom: 18,
+                  padding: "14px 16px",
+                  border: "1px solid rgba(120,130,150,.18)",
+                  borderRadius: 16,
+                }}
+              >
                 <div>
-                  <p className="eyebrow">
-                    {selectedCompetitor.group === "core"
-                      ? "Core RBR competitor"
-                      : selectedCompetitor.group === "benchmark"
-                      ? "Benchmark competitor"
-                      : "Tracked competitor"}
-                  </p>
-                  <h2>{selectedCompetitor.name}</h2>
-                  <p className="competitor-type">{selectedCompetitor.type}</p>
-
-                  <div
+                  <label
+                    htmlFor="competitor-select"
                     style={{
-                      display: "flex",
-                      gap: 10,
-                      flexWrap: "wrap",
-                      marginTop: 10,
-                      fontSize: 13,
+                      display: "block",
+                      fontSize: 11,
+                      textTransform: "uppercase",
+                      letterSpacing: ".08em",
+                      opacity: .55,
+                      marginBottom: 6,
                     }}
                   >
-                    <span className="delta-badge">
-                      India revenue: {selectedCompetitor.revenue_band_india}
-                    </span>
-                    <span className="delta-badge">
-                      RBR closeness: {selectedCompetitor.closeness}
-                    </span>
-                    {selectedCompetitor.domain ? (
-                      <span className="delta-badge">
-                        {selectedCompetitor.domain}
-                      </span>
+                    Competitor being analysed
+                  </label>
+                  <select
+                    id="competitor-select"
+                    value={selectedId}
+                    onChange={(event) => setSelectedId(event.target.value)}
+                    style={{
+                      width: "100%",
+                      padding: "10px 12px",
+                      borderRadius: 10,
+                      border: "1px solid rgba(120,130,150,.28)",
+                      background: "transparent",
+                      color: "inherit",
+                      font: "inherit",
+                      fontWeight: 700,
+                      fontSize: 15,
+                    }}
+                  >
+                    <optgroup label="Core RBR competitors">
+                      {coreCompetitors.map((competitor) => {
+                        const id = competitor.id || competitor.competitor_id;
+                        return <option key={id} value={id}>{competitor.name}</option>;
+                      })}
+                    </optgroup>
+                    <optgroup label="Benchmark competitors">
+                      {benchmarkCompetitors.map((competitor) => {
+                        const id = competitor.id || competitor.competitor_id;
+                        return <option key={id} value={id}>{competitor.name}</option>;
+                      })}
+                    </optgroup>
+                    {otherCompetitors.length ? (
+                      <optgroup label="Other tracked competitors">
+                        {otherCompetitors.map((competitor) => {
+                          const id = competitor.id || competitor.competitor_id;
+                          return <option key={id} value={id}>{competitor.name}</option>;
+                        })}
+                      </optgroup>
                     ) : null}
-                  </div>
+                  </select>
                 </div>
 
-                <div className="status-card">
-                  <span>Status</span>
-                  <strong>{selectedCompetitor.status || "Monitoring"}</strong>
+                <div
+                  style={{
+                    display: "flex",
+                    gap: 10,
+                    flexWrap: "wrap",
+                    alignItems: "center",
+                    justifyContent: "flex-end",
+                  }}
+                >
+                  <strong style={{ fontSize: 17 }}>{selectedCompetitor.name}</strong>
+                  <span className="delta-badge">India revenue: {selectedCompetitor.revenue_band_india}</span>
+                  <span className="delta-badge">RBR closeness: {selectedCompetitor.closeness}</span>
+                  <span className="delta-badge">{loading ? "Refreshing…" : selectedCompetitor.status || "Monitoring"}</span>
                 </div>
               </div>
 
-              <div className="summary-strip">
-                <div>
-                  <span>Competitors monitored</span>
-                  <strong>{summary.monitored}</strong>
-                </div>
-                <div>
-                  <span>Core RBR competitors</span>
-                  <strong>{summary.core}</strong>
-                </div>
-                <div>
-                  <span>Benchmark players</span>
-                  <strong>{summary.benchmark}</strong>
-                </div>
-                <div>
-                  <span>Signals in this company</span>
-                  <strong>{summary.totalSignals}</strong>
-                </div>
+              <div style={{ marginBottom: 10 }}>
+                <p className="eyebrow" style={{ marginBottom: 4 }}>What matters for RBR</p>
+                <h2 style={{ margin: 0, fontSize: 24 }}>Competitive sales analysis</h2>
+                <p className="competitor-type" style={{ marginTop: 5 }}>
+                  Start with the four segments most likely to explain why a visitor chooses a competitor over RBR.
+                </p>
+              </div>
+
+              <div
+                style={{
+                  display: "grid",
+                  gridTemplateColumns: "repeat(4, minmax(0, 1fr))",
+                  gap: 12,
+                  margin: "14px 0 18px",
+                }}
+              >
+                {["search", "catalog", "pricing", "journey"].map((segmentId) => (
+                  <PrimarySegmentCard
+                    key={segmentId}
+                    competitor={selectedCompetitor}
+                    segmentId={segmentId}
+                    selected={selectedSegment === segmentId}
+                    onSelect={() => setSelectedSegment(segmentId)}
+                  />
+                ))}
               </div>
 
               <div
                 style={{
                   display: "flex",
-                  gap: 8,
+                  alignItems: "center",
+                  justifyContent: "space-between",
+                  gap: 12,
                   flexWrap: "wrap",
-                  margin: "16px 0 18px",
+                  marginBottom: 12,
                 }}
               >
-                {TRACKING_SEGMENTS.map((segment) => (
-                  <button
-                    key={segment.id}
-                    type="button"
-                    onClick={() => setSelectedSegment(segment.id)}
-                    aria-pressed={selectedSegment === segment.id}
-                    style={{
-                      border:
-                        selectedSegment === segment.id
-                          ? "1px solid currentColor"
-                          : "1px solid rgba(120,130,150,.28)",
-                      borderRadius: 999,
-                      padding: "8px 12px",
-                      cursor: "pointer",
-                      font: "inherit",
-                      fontSize: 13,
-                      fontWeight: selectedSegment === segment.id ? 700 : 500,
-                      background:
-                        selectedSegment === segment.id
-                          ? "rgba(120,130,150,.13)"
-                          : "transparent",
-                      color: "inherit",
-                    }}
-                  >
-                    {segment.short}
-                  </button>
-                ))}
+                <div style={{ display: "flex", gap: 7, flexWrap: "wrap" }}>
+                  {secondarySegments.map((segmentId) => {
+                    const segment = TRACKING_SEGMENTS.find((item) => item.id === segmentId);
+                    const selected = selectedSegment === segmentId;
+                    return (
+                      <button
+                        key={segmentId}
+                        type="button"
+                        onClick={() => setSelectedSegment(segmentId)}
+                        aria-pressed={selected}
+                        style={{
+                          border: selected
+                            ? "1px solid currentColor"
+                            : "1px solid rgba(120,130,150,.24)",
+                          borderRadius: 999,
+                          padding: "7px 11px",
+                          cursor: "pointer",
+                          background: selected ? "rgba(120,130,150,.12)" : "transparent",
+                          color: "inherit",
+                          font: "inherit",
+                          fontSize: 12,
+                          fontWeight: selected ? 700 : 500,
+                        }}
+                      >
+                        {segment?.label || segmentId}
+                      </button>
+                    );
+                  })}
+                </div>
+
+                <small style={{ opacity: .5 }}>
+                  {selectedCompetitor.domain || ""}
+                </small>
               </div>
 
-              {selectedSegment === "overview" ? (
-                <>
-                  <section className="monitor-section updates-section">
-                    <div className="section-icon updates">
-                      <BoxIcon />
-                    </div>
-
-                    <div className="section-content">
-                      <h3>Product updates / Company updates</h3>
-
-                      {(selectedCompetitor.updates || []).length > 0 ? (
-                        <ol className="updates-list">
-                          {selectedCompetitor.updates.map((item, index) => (
-                            <li
-                              key={`${
-                                selectedCompetitor.id ||
-                                selectedCompetitor.competitor_id
-                              }-update-${index}`}
-                            >
-                              <span>{item.text}</span>
-                              <small>
-                                {item.date ? <>On date: {item.date}. </> : null}
-                                Source:{" "}
-                                <SourceLink url={item.source_url}>
-                                  {item.source || "link"}
-                                </SourceLink>
-                              </small>
-                            </li>
-                          ))}
-                        </ol>
-                      ) : (
-                        <EmptyListMessage text="No product or company updates found yet. This will populate after the collector runs." />
-                      )}
-                    </div>
-                  </section>
-
-                  <section className="monitor-section news-section">
-                    <div className="section-icon news">
-                      <NewsIcon />
-                    </div>
-
-                    <div className="section-content">
-                      <h3>
-                        Latest internet news about {selectedCompetitor.name}
-                      </h3>
-
-                      {(selectedCompetitor.news || []).length > 0 ? (
-                        <ol className="news-list">
-                          {selectedCompetitor.news.map((item, index) => (
-                            <li
-                              key={`${
-                                selectedCompetitor.id ||
-                                selectedCompetitor.competitor_id
-                              }-news-${index}`}
-                            >
-                              <span>{item.text}</span>
-                              <small>
-                                Source:{" "}
-                                <SourceLink url={item.source_url}>
-                                  {item.source || "link"}
-                                </SourceLink>
-                              </small>
-                            </li>
-                          ))}
-                        </ol>
-                      ) : (
-                        <EmptyListMessage text="No news items found yet. This will populate after the collector runs." />
-                      )}
-                    </div>
-                  </section>
-
-                  <MetricLine
-                    metric={selectedCompetitor.reportCount}
-                    iconType="chart"
-                  />
-
-                  <MetricLine
-                    metric={selectedCompetitor.employeeCount}
-                    iconType="people"
-                  />
-                </>
-              ) : (
-                <SegmentView
-                  competitor={selectedCompetitor}
-                  segmentId={selectedSegment}
-                />
-              )}
+              <div
+                style={{
+                  borderTop: "1px solid rgba(120,130,150,.18)",
+                  paddingTop: 14,
+                }}
+              >
+                {selectedSegment === "overview" ? (
+                  <OverviewView competitor={selectedCompetitor} />
+                ) : (
+                  <SegmentView competitor={selectedCompetitor} segmentId={selectedSegment} />
+                )}
+              </div>
             </>
           ) : (
             <div className="details-header">
@@ -1016,96 +1149,6 @@ function App() {
             </div>
           )}
         </section>
-
-        <aside className="competitor-panel">
-          <div className="competitor-panel-heading">
-            <p className="eyebrow">Monitoring list</p>
-            <h3>Competitors</h3>
-          </div>
-
-          <div
-            style={{
-              display: "flex",
-              gap: 6,
-              flexWrap: "wrap",
-              margin: "0 0 12px",
-            }}
-          >
-            {[
-              ["core", "Core"],
-              ["benchmark", "Benchmarks"],
-              ["all", "All"],
-            ].map(([value, label]) => (
-              <button
-                key={value}
-                type="button"
-                onClick={() => setGroupFilter(value)}
-                aria-pressed={groupFilter === value}
-                style={{
-                  border:
-                    groupFilter === value
-                      ? "1px solid currentColor"
-                      : "1px solid rgba(120,130,150,.25)",
-                  borderRadius: 999,
-                  padding: "6px 10px",
-                  cursor: "pointer",
-                  background:
-                    groupFilter === value
-                      ? "rgba(120,130,150,.13)"
-                      : "transparent",
-                  color: "inherit",
-                  font: "inherit",
-                  fontSize: 12,
-                  fontWeight: groupFilter === value ? 700 : 500,
-                }}
-              >
-                {label}
-              </button>
-            ))}
-          </div>
-
-          <div className="competitor-list">
-            {filteredCompetitors.map((competitor) => {
-              const competitorId = competitor.id || competitor.competitor_id;
-              const isSelected = competitorId === selectedId;
-
-              return (
-                <button
-                  key={competitorId}
-                  className={`competitor-card ${
-                    isSelected ? "selected" : ""
-                  }`}
-                  onClick={() => setSelectedId(competitorId)}
-                  aria-pressed={isSelected}
-                >
-                  <span className="competitor-icon">
-                    <GlobeIcon />
-                  </span>
-
-                  <span className="competitor-copy">
-                    <strong>{competitor.name}</strong>
-                    <small>
-                      {competitor.revenue_band_india} ·{" "}
-                      {competitor.status || "Monitoring"}
-                    </small>
-                  </span>
-
-                  <span className="chevron">›</span>
-                </button>
-              );
-            })}
-          </div>
-
-          <div className="future-note">
-            <span>{loading ? "Refreshing live data…" : "RBR tracking model"}</span>
-            <p>
-              Core competitors are tracked separately from benchmark research
-              companies. Segment collectors can populate SEO, catalogue, pricing,
-              purchase journey, lead generation, trust, marketing and threat data
-              without changing this UI again.
-            </p>
-          </div>
-        </aside>
       </main>
     </div>
   );
