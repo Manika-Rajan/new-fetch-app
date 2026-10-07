@@ -489,11 +489,11 @@ function EmptyListMessage({ text }) {
 }
 
 function formatSegmentValue(value) {
-  if (value === null || value === undefined || value === "") return "Not collected yet";
+  if (value === null || value === undefined || value === "") return "Not publicly verified";
   if (typeof value === "boolean") return value ? "Yes" : "No";
 
   if (Array.isArray(value)) {
-    if (!value.length) return "Not collected yet";
+    if (!value.length) return "Not publicly verified";
     return value
       .map((item) => {
         if (item === null || item === undefined) return "";
@@ -529,6 +529,12 @@ function formatSegmentValue(value) {
   }
 
   return String(value);
+}
+
+function hasUsefulValue(value) {
+  if (value === null || value === undefined || value === "") return false;
+  if (Array.isArray(value)) return value.length > 0;
+  return true;
 }
 
 function SegmentEvidence({ segment }) {
@@ -767,19 +773,21 @@ function SegmentView({ competitor, segmentId }) {
             marginTop: 16,
           }}
         >
-          {cards.map(([title, value]) => (
+          {populatedCards.map(([title, value]) => (
             <SegmentCard
               key={title}
               title={title}
               value={value}
-              note={
-                value === null || value === undefined || value === ""
-                  ? "Not verified from current public evidence"
-                  : ""
-              }
+              note=""
             />
           ))}
         </div>
+
+        {missingLabels.length ? (
+          <p style={{ margin: "10px 0 0", fontSize: 12, opacity: .5, lineHeight: 1.5 }}>
+            Not publicly verified in this refresh: {missingLabels.join(", ")}
+          </p>
+        ) : null}
 
         {priceObservations.length ? (
           <div style={{ marginTop: 18 }}>
@@ -824,33 +832,44 @@ function SegmentView({ competitor, segmentId }) {
 function PrimarySegmentCard({ competitor, segmentId, selected, onSelect }) {
   const segment = competitor?.segments?.[segmentId] || {};
 
+  const threatBreakdown = competitor?.segments?.threat?.score_breakdown || {};
+
   const configs = {
     search: {
       title: "Search visibility",
       subtitle: "Can customers find them before they find RBR?",
-      stat1Label: "Visibility score",
-      stat1: segment.visibility_score,
-      stat2Label: "Visibility level",
-      stat2: segment.visibility_level,
+      stat1Label: "Visibility level",
+      stat1: segment.visibility_level,
+      stat2Label: "Search evidence",
+      stat2: threatBreakdown.search_visibility !== null && threatBreakdown.search_visibility !== undefined
+        ? `${threatBreakdown.search_visibility}/20`
+        : (Array.isArray(segment.top_topics) ? `${segment.top_topics.length} topics found` : null),
     },
+
     catalogue: {
       title: "Report catalogue",
       subtitle: "What markets, industries and geographies are they covering?",
-      stat1Label: "Report count",
+      stat1Label: "Verified report count",
       stat1: segment.report_count_verified ? segment.estimated_report_count : null,
       stat2Label: "Top categories",
       stat2: Array.isArray(segment.top_categories)
         ? segment.top_categories.slice(0, 2)
         : segment.top_categories,
     },
+
     pricing: {
       title: "Pricing & offers",
       subtitle: "What does the visitor see before deciding to buy?",
       stat1Label: "Pricing visible",
       stat1: segment.pricing_visible,
-      stat2Label: "Sample available",
-      stat2: segment.sample_available,
+      stat2Label: segment.sample_available !== null && segment.sample_available !== undefined
+        ? "Sample available"
+        : "Licence options",
+      stat2: segment.sample_available !== null && segment.sample_available !== undefined
+        ? segment.sample_available
+        : segment.licence_options,
     },
+
     journey: {
       title: "Purchase journey",
       subtitle: "How do they move a visitor toward enquiry or payment?",
@@ -953,7 +972,7 @@ function PrimarySegmentCard({ competitor, segmentId, selected, onSelect }) {
 
       {!hasCollectedData ? (
         <small style={{ marginTop: 12, opacity: .48 }}>
-          Collector ready — awaiting data
+          No verified public evidence in latest refresh
         </small>
       ) : null}
     </button>
