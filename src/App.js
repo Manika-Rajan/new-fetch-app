@@ -813,6 +813,97 @@ function PrimarySegmentCard({ competitor, segmentId, selected, onSelect }) {
   );
 }
 
+
+function ActivitySignalsSummary({ competitor, onOpenDetails }) {
+  const updatesCount = (competitor?.updates || []).length;
+  const newsCount = (competitor?.news || []).length;
+  const reportChange = competitor?.reportCount?.change ?? "0";
+  const employeeChange = competitor?.employeeCount?.change ?? "0";
+
+  const signals = [
+    { label: "Product / company updates", value: updatesCount, note: "Recent tracked changes" },
+    { label: "Internet news", value: newsCount, note: "Recent mentions found" },
+    { label: "Report-count change", value: reportChange, note: `${competitor?.reportCount?.from ?? "0"} → ${competitor?.reportCount?.to ?? "0"}` },
+    { label: "Employee-count change", value: employeeChange, note: `${competitor?.employeeCount?.from ?? "0"} → ${competitor?.employeeCount?.to ?? "0"}` },
+  ];
+
+  return (
+    <section
+      style={{
+        margin: "0 0 18px",
+        padding: "15px 16px 16px",
+        border: "1px solid rgba(120,130,150,.18)",
+        borderRadius: 16,
+        background: "rgba(255,255,255,.018)",
+      }}
+    >
+      <div
+        style={{
+          display: "flex",
+          justifyContent: "space-between",
+          gap: 12,
+          alignItems: "center",
+          marginBottom: 12,
+          flexWrap: "wrap",
+        }}
+      >
+        <div>
+          <p className="eyebrow" style={{ margin: "0 0 3px" }}>Secondary competitive signals</p>
+          <h3 style={{ margin: 0, fontSize: 17 }}>Activity & signals</h3>
+        </div>
+        <button
+          type="button"
+          onClick={onOpenDetails}
+          style={{
+            border: "1px solid rgba(120,130,150,.24)",
+            borderRadius: 999,
+            padding: "7px 11px",
+            cursor: "pointer",
+            background: "transparent",
+            color: "inherit",
+            font: "inherit",
+            fontSize: 12,
+            fontWeight: 700,
+          }}
+        >
+          View signal details
+        </button>
+      </div>
+
+      <div
+        style={{
+          display: "grid",
+          gridTemplateColumns: "repeat(4, minmax(0, 1fr))",
+          gap: 10,
+        }}
+      >
+        {signals.map((signal) => (
+          <div
+            key={signal.label}
+            style={{
+              padding: "12px 13px",
+              borderRadius: 12,
+              border: "1px solid rgba(120,130,150,.14)",
+              background: "rgba(255,255,255,.018)",
+              minHeight: 88,
+            }}
+          >
+            <small style={{ display: "block", opacity: .58, marginBottom: 7 }}>
+              {signal.label}
+            </small>
+            <strong style={{ display: "block", fontSize: 20, lineHeight: 1.15 }}>
+              {signal.value}
+            </strong>
+            <small style={{ display: "block", opacity: .5, marginTop: 6 }}>
+              {signal.note}
+            </small>
+          </div>
+        ))}
+      </div>
+    </section>
+  );
+}
+
 function OverviewView({ competitor }) {
   return (
     <>
@@ -1081,6 +1172,11 @@ function App() {
                   />
                 ))}
               </div>
+
+              <ActivitySignalsSummary
+                competitor={selectedCompetitor}
+                onOpenDetails={() => setSelectedSegment("overview")}
+              />
 
               <div
                 style={{
