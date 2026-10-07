@@ -161,7 +161,7 @@ const TRACKING_SEGMENTS = [
       "Keywords, Google positions, organic visibility and search overlap with RBR.",
   },
   {
-    id: "catalog",
+    id: "catalogue",
     label: "Report catalogue & topics",
     short: "Catalogue",
     description:
@@ -182,7 +182,7 @@ const TRACKING_SEGMENTS = [
       "Google/search entry → report page → trust → sample/enquiry → payment or sales contact.",
   },
   {
-    id: "leadgen",
+    id: "lead_generation",
     label: "Lead generation",
     short: "Lead gen",
     description:
@@ -490,48 +490,117 @@ function EmptyListMessage({ text }) {
 
 function formatSegmentValue(value) {
   if (value === null || value === undefined || value === "") return "Not collected yet";
-  if (Array.isArray(value)) return value.length ? value.join(", ") : "Not collected yet";
-  if (typeof value === "object") return JSON.stringify(value);
+  if (typeof value === "boolean") return value ? "Yes" : "No";
+
+  if (Array.isArray(value)) {
+    if (!value.length) return "Not collected yet";
+    return value
+      .map((item) => {
+        if (item === null || item === undefined) return "";
+        if (typeof item === "string" || typeof item === "number") return String(item);
+        if (typeof item === "object") {
+          return (
+            item.report_title ||
+            item.title ||
+            item.text ||
+            item.label ||
+            item.name ||
+            item.description ||
+            item.url ||
+            item.source_url ||
+            JSON.stringify(item)
+          );
+        }
+        return String(item);
+      })
+      .filter(Boolean)
+      .join(", ");
+  }
+
+  if (typeof value === "object") {
+    return (
+      value.text ||
+      value.title ||
+      value.label ||
+      value.name ||
+      value.description ||
+      JSON.stringify(value)
+    );
+  }
+
   return String(value);
 }
 
 function SegmentEvidence({ segment }) {
   if (!segment || typeof segment !== "object") return null;
 
-  const items = Array.isArray(segment.evidence)
-    ? segment.evidence
-    : Array.isArray(segment.items)
-    ? segment.items
-    : [];
+  const sources = Array.isArray(segment.sources) ? segment.sources : [];
+  const candidateEvidence = [
+    ...(Array.isArray(segment.observations) ? segment.observations : []),
+    ...(Array.isArray(segment.catalogue_observations) ? segment.catalogue_observations : []),
+    ...(Array.isArray(segment.pricing_notes) ? segment.pricing_notes : []),
+    ...(Array.isArray(segment.steps) ? segment.steps : []),
+    ...(Array.isArray(segment.friction_points) ? segment.friction_points : []),
+    ...(Array.isArray(segment.strong_points) ? segment.strong_points : []),
+    ...(Array.isArray(segment.lead_magnets) ? segment.lead_magnets : []),
+    ...(Array.isArray(segment.trust_signals) ? segment.trust_signals : []),
+    ...(Array.isArray(segment.marketing_observations) ? segment.marketing_observations : []),
+    ...(Array.isArray(segment.reasons) ? segment.reasons : []),
+    ...(Array.isArray(segment.competitor_advantages) ? segment.competitor_advantages : []),
+    ...(Array.isArray(segment.rbr_advantages) ? segment.rbr_advantages : []),
+    ...(Array.isArray(segment.recommended_actions) ? segment.recommended_actions : []),
+  ];
 
-  if (!items.length) return null;
+  const evidence = candidateEvidence
+    .map((item) => {
+      if (typeof item === "string") return item.trim();
+      if (item && typeof item === "object") {
+        return String(item.text || item.title || item.description || item.label || "").trim();
+      }
+      return "";
+    })
+    .filter(Boolean);
+
+  if (!evidence.length && !sources.length) return null;
 
   return (
-    <div style={{ marginTop: 14 }}>
-      <strong style={{ display: "block", marginBottom: 8 }}>Latest evidence</strong>
-      <ol className="updates-list">
-        {items.map((item, index) => {
-          const text =
-            typeof item === "string"
-              ? item
-              : item.text || item.title || item.summary || "Observed signal";
-          const sourceUrl =
-            typeof item === "object" ? item.source_url || item.url : "";
-          const source =
-            typeof item === "object" ? item.source || "source" : "";
+    <div style={{ marginTop: 18 }}>
+      {evidence.length ? (
+        <>
+          <strong style={{ display: "block", marginBottom: 8 }}>Key observations</strong>
+          <ol className="updates-list">
+            {evidence.slice(0, 12).map((item, index) => (
+              <li key={`segment-evidence-${index}`}>
+                <span>{item}</span>
+              </li>
+            ))}
+          </ol>
+        </>
+      ) : null}
 
-          return (
-            <li key={`segment-evidence-${index}`}>
-              <span>{text}</span>
-              {sourceUrl || source ? (
-                <small>
-                  Source: <SourceLink url={sourceUrl}>{source || "link"}</SourceLink>
-                </small>
-              ) : null}
-            </li>
-          );
-        })}
-      </ol>
+      {sources.length ? (
+        <div style={{ marginTop: evidence.length ? 16 : 0 }}>
+          <strong style={{ display: "block", marginBottom: 8 }}>Sources</strong>
+          <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
+            {sources.map((source, index) => {
+              const label =
+                typeof source === "string"
+                  ? source
+                  : source?.label || source?.source || source?.url || "source";
+              const url =
+                typeof source === "string"
+                  ? source
+                  : source?.url || source?.source_url || "";
+
+              return (
+                <SourceLink key={`segment-source-${index}`} url={url}>
+                  {label}
+                </SourceLink>
+              );
+            })}
+          </div>
+        </div>
+      ) : null}
     </div>
   );
 }
@@ -575,56 +644,84 @@ function SegmentView({ competitor, segmentId }) {
 
   const layouts = {
     search: [
-      ["RBR-overlap keywords", segment.keyword_overlap ?? segment.keywords_overlap],
-      ["Organic visibility", segment.organic_visibility ?? segment.visibility],
-      ["Tracked rankings", segment.tracked_keywords ?? segment.ranking_count],
-      ["Search trend", segment.trend ?? segment.change],
+      ["Visibility score", segment.visibility_score],
+      ["Visibility level", segment.visibility_level],
+      ["Top topics", segment.top_topics],
+      ["Observed queries", segment.observed_queries],
+      ["Keyword overlap", segment.keyword_overlap],
     ],
-    catalog: [
-      ["Current report count", segment.report_count ?? competitor?.reportCount?.to],
-      ["New reports", segment.new_reports ?? segment.added_reports],
-      ["Top sectors", segment.top_sectors ?? segment.sectors],
-      ["Topic overlap with RBR", segment.topic_overlap ?? segment.overlap],
+    catalogue: [
+      ["Verified report count", segment.report_count_verified ? segment.estimated_report_count : null],
+      ["Report count verified", segment.report_count_verified],
+      ["New reports in 30 days", segment.new_reports_30d],
+      ["Top categories", segment.top_categories],
+      ["Industries", segment.industries],
+      ["Geographies", segment.geographies],
     ],
     pricing: [
-      ["Typical displayed price", segment.typical_price ?? segment.price],
-      ["Discount / offer", segment.offer ?? segment.discount],
-      ["Licence options", segment.licences ?? segment.license_options],
-      ["Free sample", segment.free_sample ?? segment.sample_available],
+      ["Pricing visible", segment.pricing_visible],
+      ["Sample available", segment.sample_available],
+      ["Lowest observed price", segment.lowest_observed_price],
+      ["Highest observed price", segment.highest_observed_price],
+      ["Currency", segment.currency],
+      ["Licence options", segment.licence_options],
+      ["Discount detected", segment.discount_detected],
+      ["Discount details", segment.discount_details],
     ],
     journey: [
-      ["Primary CTA", segment.primary_cta ?? segment.cta],
-      ["Price visible", segment.price_visible],
-      ["Direct checkout", segment.direct_checkout ?? segment.checkout],
-      ["Sales friction", segment.sales_friction ?? segment.friction],
+      ["Direct checkout", segment.direct_checkout],
+      ["Enquiry required", segment.enquiry_required],
+      ["Sample CTA", segment.sample_cta],
+      ["Talk to analyst", segment.talk_to_analyst],
+      ["Journey model", segment.journey_model],
+      ["Journey steps", segment.steps],
     ],
-    leadgen: [
-      ["Sample capture", segment.sample_capture ?? segment.sample_form],
-      ["Enquiry form", segment.enquiry_form],
-      ["Chat / WhatsApp", segment.chat_whatsapp ?? segment.chat],
-      ["Sales callback", segment.callback ?? segment.sales_callback],
+    lead_generation: [
+      ["Sample form", segment.sample_form],
+      ["Email capture", segment.email_capture],
+      ["Phone capture", segment.phone_capture],
+      ["Contact sales", segment.contact_sales],
+      ["Newsletter", segment.newsletter],
+      ["Lead magnets", segment.lead_magnets],
     ],
     trust: [
-      ["Client / customer proof", segment.client_proof ?? segment.client_logos],
-      ["Methodology", segment.methodology],
-      ["Analyst credentials", segment.analyst_credentials ?? segment.analysts],
-      ["Testimonials / citations", segment.testimonials ?? segment.citations],
+      ["Methodology visible", segment.methodology_visible],
+      ["Client logos", segment.client_logos],
+      ["Testimonials", segment.testimonials],
+      ["Analyst profiles", segment.analyst_profiles],
+      ["Author names", segment.author_names],
+      ["Source transparency", segment.source_transparency],
     ],
     marketing: [
-      ["Content activity", segment.content_activity ?? segment.activity],
-      ["Recent campaigns", segment.recent_campaigns ?? segment.campaigns],
-      ["PR / news activity", segment.pr_activity ?? segment.news_activity],
-      ["Primary message", segment.positioning ?? segment.primary_message],
+      ["Content types", segment.content_types],
+      ["Promotions", segment.promotions],
+      ["Thought leadership", segment.thought_leadership],
+      ["Social activity", segment.social_activity],
     ],
     threat: [
-      ["Threat score", segment.threat_score ?? competitor?.threat_score],
-      ["RBR overlap", segment.rbr_overlap ?? segment.overlap],
-      ["Momentum", segment.momentum],
-      ["Recommended RBR action", segment.recommended_action ?? segment.action],
+      ["Threat score", segment.threat_score],
+      ["Threat level", segment.threat_level],
+      ["Search visibility", segment.score_breakdown?.search_visibility],
+      ["Catalogue", segment.score_breakdown?.catalogue],
+      ["Pricing strength", segment.score_breakdown?.pricing_strength],
+      ["Purchase journey", segment.score_breakdown?.purchase_journey],
+      ["Trust", segment.score_breakdown?.trust],
+      ["Lead generation + marketing", segment.score_breakdown?.lead_generation_marketing],
+      ["Business-model overlap", segment.score_breakdown?.business_model_overlap],
     ],
   };
 
   const cards = layouts[segmentId] || [];
+  const implication =
+    segment.rbr_implication ||
+    (segmentId === "threat" && Array.isArray(segment.recommended_actions)
+      ? segment.recommended_actions.join(" • ")
+      : "");
+
+  const priceObservations =
+    segmentId === "pricing" && Array.isArray(segment.price_observations)
+      ? segment.price_observations
+      : [];
 
   return (
     <section className="monitor-section" style={{ display: "block" }}>
@@ -636,6 +733,31 @@ function SegmentView({ competitor, segmentId }) {
         <p className="metric-text">
           {TRACKING_SEGMENTS.find((item) => item.id === segmentId)?.description}
         </p>
+
+        {implication ? (
+          <div
+            style={{
+              marginTop: 14,
+              padding: "13px 15px",
+              borderRadius: 12,
+              border: "1px solid rgba(120,130,150,.20)",
+              background: "rgba(120,130,150,.06)",
+            }}
+          >
+            <small
+              style={{
+                display: "block",
+                textTransform: "uppercase",
+                letterSpacing: ".06em",
+                opacity: .55,
+                marginBottom: 5,
+              }}
+            >
+              RBR implication
+            </small>
+            <strong style={{ lineHeight: 1.5 }}>{implication}</strong>
+          </div>
+        ) : null}
 
         <div
           style={{
@@ -652,19 +774,46 @@ function SegmentView({ competitor, segmentId }) {
               value={value}
               note={
                 value === null || value === undefined || value === ""
-                  ? "Collector field ready"
+                  ? "Not verified from current public evidence"
                   : ""
               }
             />
           ))}
         </div>
 
+        {priceObservations.length ? (
+          <div style={{ marginTop: 18 }}>
+            <strong style={{ display: "block", marginBottom: 8 }}>
+              Verified public prices
+            </strong>
+            <ol className="updates-list">
+              {priceObservations.map((item, index) => (
+                <li key={`price-observation-${index}`}>
+                  <span>
+                    {item.report_title || "Observed report"} —{" "}
+                    <strong>
+                      {item.currency ? `${item.currency} ` : ""}
+                      {item.price}
+                    </strong>
+                    {item.licence ? ` (${item.licence})` : ""}
+                  </span>
+                  <small>
+                    Source:{" "}
+                    <SourceLink url={item.source_url}>
+                      {item.source_url ? "open price source" : "source"}
+                    </SourceLink>
+                  </small>
+                </li>
+              ))}
+            </ol>
+          </div>
+        ) : null}
+
         <SegmentEvidence segment={segment} />
 
         {!Object.keys(segment).length ? (
           <p className="metric-text" style={{ marginTop: 16 }}>
-            No collected data for this segment yet. The interface is ready for the
-            backend collector to populate <strong>segments.{segmentId}</strong>.
+            No collected data for this segment yet.
           </p>
         ) : null}
       </div>
@@ -679,34 +828,36 @@ function PrimarySegmentCard({ competitor, segmentId, selected, onSelect }) {
     search: {
       title: "Search visibility",
       subtitle: "Can customers find them before they find RBR?",
-      stat1Label: "Organic visibility",
-      stat1: segment.organic_visibility ?? segment.visibility,
-      stat2Label: "RBR overlap keywords",
-      stat2: segment.keyword_overlap ?? segment.keywords_overlap,
+      stat1Label: "Visibility score",
+      stat1: segment.visibility_score,
+      stat2Label: "Visibility level",
+      stat2: segment.visibility_level,
     },
-    catalog: {
+    catalogue: {
       title: "Report catalogue",
-      subtitle: "What markets and reports are they selling?",
-      stat1Label: "Current reports",
-      stat1: segment.report_count ?? competitor?.reportCount?.to,
-      stat2Label: "New reports",
-      stat2: segment.new_reports ?? segment.added_reports,
+      subtitle: "What markets, industries and geographies are they covering?",
+      stat1Label: "Report count",
+      stat1: segment.report_count_verified ? segment.estimated_report_count : null,
+      stat2Label: "Top categories",
+      stat2: Array.isArray(segment.top_categories)
+        ? segment.top_categories.slice(0, 2)
+        : segment.top_categories,
     },
     pricing: {
       title: "Pricing & offers",
       subtitle: "What does the visitor see before deciding to buy?",
-      stat1Label: "Typical price",
-      stat1: segment.typical_price ?? segment.price,
-      stat2Label: "Offer / discount",
-      stat2: segment.offer ?? segment.discount,
+      stat1Label: "Pricing visible",
+      stat1: segment.pricing_visible,
+      stat2Label: "Sample available",
+      stat2: segment.sample_available,
     },
     journey: {
       title: "Purchase journey",
       subtitle: "How do they move a visitor toward enquiry or payment?",
-      stat1Label: "Primary CTA",
-      stat1: segment.primary_cta ?? segment.cta,
-      stat2Label: "Direct checkout",
-      stat2: segment.direct_checkout ?? segment.checkout,
+      stat1Label: "Direct checkout",
+      stat1: segment.direct_checkout,
+      stat2Label: "Enquiry required",
+      stat2: segment.enquiry_required,
     },
   };
 
@@ -790,17 +941,13 @@ function PrimarySegmentCard({ competitor, segmentId, selected, onSelect }) {
           <small style={{ display: "block", opacity: .55, marginBottom: 4 }}>
             {config.stat1Label}
           </small>
-          <strong style={{ fontSize: 15 }}>
-            {formatSegmentValue(config.stat1)}
-          </strong>
+          <strong style={{ fontSize: 15 }}>{formatSegmentValue(config.stat1)}</strong>
         </div>
         <div>
           <small style={{ display: "block", opacity: .55, marginBottom: 4 }}>
             {config.stat2Label}
           </small>
-          <strong style={{ fontSize: 15 }}>
-            {formatSegmentValue(config.stat2)}
-          </strong>
+          <strong style={{ fontSize: 15 }}>{formatSegmentValue(config.stat2)}</strong>
         </div>
       </div>
 
@@ -1022,7 +1169,7 @@ function App() {
     (item) => item.group !== "core" && item.group !== "benchmark"
   );
 
-  const secondarySegments = ["leadgen", "trust", "marketing", "threat", "overview"];
+  const secondarySegments = ["lead_generation", "trust", "marketing", "threat", "overview"];
 
   return (
     <div className="coe-monitor-page">
@@ -1146,6 +1293,32 @@ function App() {
                 </div>
               </div>
 
+              {selectedCompetitor.executive_summary ? (
+                <section
+                  style={{
+                    marginBottom: 18,
+                    padding: "15px 17px",
+                    borderRadius: 14,
+                    border: "1px solid rgba(120,130,150,.18)",
+                    background: "rgba(255,255,255,.02)",
+                  }}
+                >
+                  <p className="eyebrow" style={{ margin: "0 0 5px" }}>
+                    Competitive intelligence summary
+                  </p>
+                  <p
+                    style={{
+                      margin: 0,
+                      lineHeight: 1.6,
+                      fontSize: 14,
+                      opacity: .86,
+                    }}
+                  >
+                    {selectedCompetitor.executive_summary}
+                  </p>
+                </section>
+              ) : null}
+
               <div style={{ marginBottom: 10 }}>
                 <p className="eyebrow" style={{ marginBottom: 4 }}>What matters for RBR</p>
                 <h2 style={{ margin: 0, fontSize: 24 }}>Competitive sales analysis</h2>
@@ -1162,7 +1335,7 @@ function App() {
                   margin: "14px 0 18px",
                 }}
               >
-                {["search", "catalog", "pricing", "journey"].map((segmentId) => (
+                {["search", "catalogue", "pricing", "journey"].map((segmentId) => (
                   <PrimarySegmentCard
                     key={segmentId}
                     competitor={selectedCompetitor}
